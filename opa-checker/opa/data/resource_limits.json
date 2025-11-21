@@ -1,0 +1,17 @@
+{
+  "limits": {
+    "max_model_size_mb": 50,
+    "min_model_size_mb": 1
+  },
+  "model_config": {
+    "expected_parameters": 1000000
+  },
+  "security": {
+    "max_gradient_norm": 10.0,
+    "parameter_threshold": 1000.0
+  },
+  "current_round": {
+    "round_number": 5,
+    "selected_clients": ["client_1", "client_2", "client_3"]
+  }
+}

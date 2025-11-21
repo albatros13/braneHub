@@ -1,0 +1,11 @@
+{
+  "aggregation": {
+    "min_participants": 3,
+    "min_total_samples": 1000,
+    "min_samples_per_client": 50
+  },
+  "privacy": {
+    "max_epsilon_budget": 10.0,
+    "current_epsilon_spent": 7.5
+  }
+}

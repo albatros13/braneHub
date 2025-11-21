@@ -1,0 +1,11 @@
+# opa-config.yaml
+decision_logs:
+  console: true
+  service: decision_logger
+
+services:
+  decision_logger:
+    url: http://logging-service:8080/logs
+    credentials:
+      bearer:
+        token: "braneHub"

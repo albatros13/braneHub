@@ -1,0 +1,126 @@
+{
+  "projects": [
+    {
+      "id": "project1",
+      "title": "Image Classification Challenge",
+      "owner": "alice",
+      "tags": [
+        "vision",
+        "pytorch"
+      ]
+    },
+    {
+      "id": "project2",
+      "title": "Time Series Forecasting",
+      "owner": "bob",
+      "tags": [
+        "timeseries",
+        "arima"
+      ]
+    },
+    {
+      "id": "project3",
+      "title": "NLP Sentiment Analyzer",
+      "owner": "carol",
+      "tags": [
+        "nlp",
+        "transformers"
+      ]
+    },
+    {
+      "id": "project4",
+      "title": "Federated Diabetes Prediction Study",
+      "owner": "vvv",
+      "tags": [
+        "fdp",
+        "ehr",
+        "genomics"
+      ],
+      "fdp": {
+        "research_institution": "Brane Research Institute",
+        "contact_email": "fdp-contact@example.org",
+        "study_objective": "Develop a federated model to predict Type 2 Diabetes risk without moving raw data.",
+        "data_types_required": [
+          "EHR",
+          "Genomics"
+        ],
+        "data_sensitivity_level": "High",
+        "security_measures_planned": [
+          "Encryption",
+          "Secure Containers",
+          "Access Logs"
+        ],
+        "result_sharing_policy": "Publish aggregate metrics and model weights, no raw data sharing.",
+        "participant_responsibilities": "Provide compliant compute, monitor jobs, and review audit logs.",
+        "legal_basis_for_processing": "GDPR Consent",
+        "third_party_collaboration": true
+      }
+    },
+    {
+      "id": "project5",
+      "title": "Pharma-market-research",
+      "owner": "vvvv",
+      "tags": [
+        "fdp",
+        "imaging",
+        "ehr",
+        "genomics",
+        "lab results"
+      ],
+      "type": "FDP",
+      "fdp": {
+        "research_institution": "UvA",
+        "contact_email": "natallia.kokash@gmail.com",
+        "study_objective": "Collect statistics about hydrocephalus incidence in children aged 2 to 8 months.\r\nRelevant patient information may include maternal medical history, underlying health conditions, medication or substance\r\nuse, and pregnancy-related complications.",
+        "data_types_required": [
+          "Imaging",
+          "EHR",
+          "Genomics",
+          "Lab Results"
+        ],
+        "data_sensitivity_level": "High",
+        "security_measures_planned": [
+          "Encryption",
+          "Secure Containers",
+          "Access Logs",
+          "Pseudonymization"
+        ],
+        "result_sharing_policy": "",
+        "participant_responsibilities": "",
+        "legal_basis_for_processing": "Research with Waiver",
+        "third_party_collaboration": false
+      }
+    }
+  ],
+  "project_participants": {
+    "project1": [
+      "alice"
+    ],
+    "project2": [
+      "bob"
+    ],
+    "project3": [
+      "carol"
+    ],
+    "project4": [
+      "vvv"
+    ],
+    "project5": [
+      "vvvv"
+    ]
+  },
+  "users": [
+    {
+      "id": "alice"
+    },
+    {
+      "id": "bob"
+    },
+    {
+      "id": "carol"
+    },
+    {
+      "id": "vvv"
+    }
+  ]
+}

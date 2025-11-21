@@ -1,0 +1,12 @@
+{
+  "enrollment": {
+    "min_dataset_size": 100,
+    "min_cpu_cores": 2,
+    "min_memory_gb": 4,
+    "start_time": 1699900800000000000,
+    "end_time": 1700006400000000000
+  },
+  "blacklist": {
+    "client_ids": ["client_malicious_1", "client_compromised_2"]
+  }
+}

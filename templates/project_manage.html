@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Manage Project · BraneHub{% endblock %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <div>
+      <a href="{{ url_for('dashboard') }}" class="text-decoration-none">← Back to Dashboard</a>
+      <h1 class="h4 mt-2 mb-0">Manage Project</h1>
+      <div class="text-muted small">Project ID: {{ project.id }}</div>
+    </div>
+    {% if is_owner %}
+      <form method="post" action="{{ url_for('project_delete', project_id=project.id) }}" onsubmit="return confirm('Delete this project permanently? This cannot be undone.');">
+        <button type="submit" class="btn btn-outline-danger">Delete Project</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Project Details</h5>
+        <dl class="row mb-0">
+          <dt class="col-sm-3">Title</dt>
+          <dd class="col-sm-9">{{ project.title }}</dd>
+          <dt class="col-sm-3">Owner</dt>
+          <dd class="col-sm-9">{{ project.owner }}</dd>
+          <dt class="col-sm-3">Tags</dt>
+          <dd class="col-sm-9">{{ (project.tags or []) | join(', ') }}</dd>
+          <dt class="col-sm-3">Type</dt>
+          <dd class="col-sm-9">{{ project.type or 'General' }}</dd>
+        </dl>
+        {% if project.fdp %}
+          <hr>
+          <h6>FDP Specification</h6>
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Research Institution</dt>
+            <dd class="col-sm-8">{{ project.fdp.research_institution }}</dd>
+            <dt class="col-sm-4">Contact Email</dt>
+            <dd class="col-sm-8">{{ project.fdp.contact_email }}</dd>
+            <dt class="col-sm-4">Study Objective</dt>
+            <dd class="col-sm-8">{{ project.fdp.study_objective }}</dd>
+            <dt class="col-sm-4">Data Types</dt>
+            <dd class="col-sm-8">{{ (project.fdp.data_types_required or []) | join(', ') }}</dd>
+            <dt class="col-sm-4">Sensitivity</dt>
+            <dd class="col-sm-8">{{ project.fdp.data_sensitivity_level }}</dd>
+            <dt class="col-sm-4">Security Measures</dt>
+            <dd class="col-sm-8">{{ (project.fdp.security_measures_planned or []) | join(', ') }}</dd>
+            <dt class="col-sm-4">Result Sharing</dt>
+            <dd class="col-sm-8">{{ project.fdp.result_sharing_policy }}</dd>
+            <dt class="col-sm-4">Responsibilities</dt>
+            <dd class="col-sm-8">{{ project.fdp.participant_responsibilities }}</dd>
+            <dt class="col-sm-4">Legal Basis</dt>
+            <dd class="col-sm-8">{{ project.fdp.legal_basis_for_processing }}</dd>
+            <dt class="col-sm-4">3rd-Party Collaboration</dt>
+            <dd class="col-sm-8">{{ 'Yes' if project.fdp.third_party_collaboration else 'No' }}</dd>
+          </dl>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Participants</h5>
+        {% if participants %}
+          <ul class="list-group list-group-flush">
+            {% for u in participants %}
+              <li class="list-group-item">{{ u }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted mb-0">No participants yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if is_owner %}
+<div class="row g-4 mt-1">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Edit Project</h5>
+        <form method="post" action="{{ url_for('project_edit', project_id=project.id) }}">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control" name="title" value="{{ project.title }}" placeholder="Project title">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" class="form-control" name="tags" value="{{ (project.tags or []) | join(', ') }}" placeholder="e.g., fdp, ehr, genomics">
+          </div>
+          {% if project.fdp %}
+          <div class="mb-3">
+            <label class="form-label">Contact Email</label>
+            <input type="email" class="form-control" name="contact_email" value="{{ project.fdp.contact_email }}" placeholder="contact@example.org">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Study Objective</label>
+            <textarea class="form-control" name="study_objective" rows="4" placeholder="Objective...">{{ project.fdp.study_objective }}</textarea>
+          </div>
+          {% endif %}
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('project_manage', project_id=project.id) }}" class="btn btn-outline-secondary">Reset</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info mt-4" role="alert">
+  You are viewing this project as a participant or guest. Only the owner can edit or delete the project.
+</div>
+{% endif %}
+{% endblock %}

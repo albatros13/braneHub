@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard · BraneHub{% endblock %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="hero d-flex align-items-center justify-content-between">
+      <div>
+        <h1 class="h3 mb-1">Hi {{ username }}!</h1>
+        <p class="text-muted mb-0">Choose what to do next: manage your projects or explore what others are building.</p>
+      </div>
+      <div>
+        <a href="{{ url_for('fdp_new') }}" class="btn btn-success">Start FDP Project</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card card-hover h-100">
+      <div class="card-body">
+        <h5 class="card-title">My Projects & Participation</h5>
+        {% if own_projects %}
+          <ul class="list-group list-group-flush">
+            {% for p in own_projects %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ p.title }}</strong>
+                    <div class="text-muted small">Owner: {{ p.owner }} · Tags: {{ p.tags | join(', ') }}</div>
+                    <div class="small mt-1">Participants: {{ participants.get(p.id, []) | join(', ') }}</div>
+                  </div>
+                  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('project_manage', project_id=p.id) }}">Manage</a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">You have not joined or created any projects yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card card-hover h-100">
+      <div class="card-body">
+        <h5 class="card-title">Explore & Join Projects</h5>
+        {% if explore_projects %}
+          <ul class="list-group list-group-flush">
+            {% for p in explore_projects %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ p.title }}</strong>
+                    <div class="text-muted small">Owner: {{ p.owner }} · Tags: {{ p.tags | join(', ') }}</div>
+                  </div>
+                  <form method="post" action="{{ url_for('join_project', project_id=p.id) }}" class="m-0">
+                    <button type="submit" class="btn btn-primary btn-sm">Join</button>
+                  </form>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No available projects to explore. Check back later!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
