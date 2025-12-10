@@ -1,0 +1,36 @@
+[
+  {
+    "project_id": "project1",
+    "username": "natallia.kokash@gmail.com",
+    "submitted_at": "20251210T124033Z",
+    "answers_file": "static/data/db/onboarding_answers/project1_natallia.kokash@gmail.com_20251210T124033Z.json",
+    "status": "submitted"
+  },
+  {
+    "project_id": "project1",
+    "username": "natallia.kokash@gmail.com",
+    "submitted_at": "20251210T212726Z",
+    "answers_file": "static/data/db/onboarding_answers/project1_natallia.kokash@gmail.com_20251210T212726Z.json",
+    "status": "submitted"
+  },
+  {
+    "project_id": "project6",
+    "username": "user",
+    "submitted_at": "20251210T213324Z",
+    "answers_file": "static/data/db/onboarding_answers/project6_user_20251210T213324Z.json",
+    "status": "accepted",
+    "rejection_reason": "",
+    "decided_at": "20251210T215344Z",
+    "decided_by": "main"
+  },
+  {
+    "project_id": "project6",
+    "username": "user",
+    "submitted_at": "20251210T215259Z",
+    "answers_file": "static/data/db/onboarding_answers/project6_user_20251210T215259Z.json",
+    "status": "rejected",
+    "rejection_reason": "Data irrelevant",
+    "decided_at": "20251210T215402Z",
+    "decided_by": "main"
+  }
+]

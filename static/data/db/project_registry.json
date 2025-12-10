@@ -90,6 +90,32 @@
         "legal_basis_for_processing": "Research with Waiver",
         "third_party_collaboration": false
       }
+    },
+    {
+      "id": "project6",
+      "title": "Test",
+      "owner": "main",
+      "tags": [
+        "fdp",
+        "ehr"
+      ],
+      "type": "FDP",
+      "fdp": {
+        "research_institution": "Test",
+        "contact_email": "test@gmail.com",
+        "study_objective": "Test",
+        "data_types_required": [
+          "EHR"
+        ],
+        "data_sensitivity_level": "Medium",
+        "security_measures_planned": [
+          "Encryption"
+        ],
+        "result_sharing_policy": "Test",
+        "participant_responsibilities": "Test",
+        "legal_basis_for_processing": "",
+        "third_party_collaboration": false
+      }
     }
   ],
   "project_participants": {
@@ -107,6 +133,10 @@
     ],
     "project5": [
       "vvvv"
+    ],
+    "project6": [
+      "main",
+      "user"
     ]
   },
   "users": [
@@ -121,6 +151,14 @@
     },
     {
       "id": "vvv"
+    },
+    {
+      "id": "main",
+      "password": "main"
+    },
+    {
+      "id": "user",
+      "password": "user"
     }
   ]
 }

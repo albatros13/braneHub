@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Onboarding Requests · BraneHub{% endblock %}
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <h1 class="h4 mb-0">Onboarding Requests</h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if not requests %}
+      <p class="text-muted mb-0">No onboarding requests for your projects yet.</p>
+    {% else %}
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Applicant</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for r in requests %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ r.project_title }}</div>
+                <div class="small text-muted">ID: {{ r.project_id }}</div>
+              </td>
+              <td>{{ r.username }}</td>
+              <td><span class="small">{{ r.submitted_at }}</span></td>
+              <td>
+                {% if r.status == 'submitted' %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% elif r.status == 'accepted' %}
+                  <span class="badge bg-success">Accepted</span>
+                {% elif r.status == 'rejected' %}
+                  <span class="badge bg-danger">Rejected</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ r.status }}</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-primary" href="{{ url_for('onboarding_request_detail', req_id=r._id) }}">View</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

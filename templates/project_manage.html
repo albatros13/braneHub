@@ -82,6 +82,50 @@
 {% if is_owner %}
 <div class="row g-4 mt-1">
   <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Onboarding Requests</h5>
+        {% if not project_requests %}
+          <p class="text-muted mb-0">No onboarding requests have been submitted for this project yet.</p>
+        {% else %}
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Submitted</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for r in project_requests %}
+                <tr>
+                  <td>{{ r.username }}</td>
+                  <td><span class="small">{{ r.submitted_at }}</span></td>
+                  <td>
+                    {% if r.status == 'submitted' %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif r.status == 'accepted' %}
+                      <span class="badge bg-success">Accepted</span>
+                    {% elif r.status == 'rejected' %}
+                      <span class="badge bg-danger">Rejected</span>
+                    {% else %}
+                      <span class="badge bg-secondary">{{ r.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-primary" href="{{ url_for('onboarding_request_detail', req_id=r._id) }}">View</a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-body">
         <h5 class="card-title">Edit Project</h5>

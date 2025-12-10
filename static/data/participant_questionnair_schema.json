@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Federated Learning Data Provider Compliance Questionnaire",
+  "type": "object",
+  "properties": {
+    "organization": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "primaryContact": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "role": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string" }
+          },
+          "required": ["name", "email"]
+        },
+        "dpoContact": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "role": { "type": "string" },
+            "email": { "type": "string", "format": "email" }
+          }
+        },
+        "jurisdictions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["EU", "UK", "US", "Other"]
+          }
+        }
+      },
+      "required": ["name", "primaryContact"]
+    },
+
+    "dataNature": {
+      "type": "object",
+      "properties": {
+        "dataTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "EHR",
+              "DiagnosticImaging",
+              "PathologyImages",
+              "GenomicData",
+              "LabTests",
+              "WearableSensor",
+              "ClaimsData",
+              "Other"
+            ]
+          }
+        },
+        "involvesHumanResearch": { "type": "boolean" },
+        "involvesHumanSamples": { "type": "boolean" },
+        "samplesEthicalApproval": { "type": ["boolean", "string"] },
+        "retrospectiveData": { "type": "boolean" },
+        "retrospectiveConsent": {
+          "type": "string",
+          "enum": ["Yes", "No", "Unsure"]
+        }
+      }
+    },
+
+    "identifiability": {
+      "type": "object",
+      "properties": {
+        "containsPersonalData": {
+          "type": "string",
+          "enum": ["Yes", "No", "Unsure"]
+        },
+        "directIdentifiers": { "type": "boolean" },
+        "quasiIdentifiers": { "type": "boolean" },
+        "identifiableImagesOrSignals": { "type": "boolean" },
+        "maskingMethods": { "type": "string" },
+        "processingLevel": {
+          "type": "string",
+          "enum": ["Anonymized", "Pseudonymized", "Identifiable", "Other"]
+        }
+      }
+    },
+
+    "ethicalLegal": {
+      "type": "object",
+      "properties": {
+        "irbApproval": {
+          "type": "string",
+          "enum": ["Yes", "No", "NotApplicable"]
+        },
+        "irbDetails": { "type": "string" },
+        "legalBasis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "InformedConsent",
+              "BroadConsent",
+              "PublicInterest",
+              "LegitimateInterest",
+              "Contractual",
+              "Other"
+            ]
+          }
+        },
+        "consentAllowsFederatedLearning": {
+          "type": "string",
+          "enum": ["Yes", "No", "NotApplicable"]
+        },
+        "useRestrictions": { "type": "string" }
+      }
+    },
+
+    "securityInfrastructure": {
+      "type": "object",
+      "properties": {
+        "infrastructure": {
+          "type": "string",
+          "enum": [
+            "OnPremise",
+            "PrivateCloud",
+            "PublicCloud",
+            "HospitalEnclave",
+            "Other"
+          ]
+        },
+        "securityCertifications": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ISO27001",
+              "HIPAA",
+              "NEN7510",
+              "SOC2",
+              "None",
+              "Other"
+            ]
+          }
+        },
+        "accessControlModel": {
+          "type": "string",
+          "enum": [
+            "RBAC",
+            "ABAC",
+            "ConsentBased",
+            "PolicyBased",
+            "NotSure"
+          ]
+        },
+        "auditLoggingRequired": {
+          "type": "string",
+          "enum": ["Yes", "No", "Conditional"]
+        },
+        "networkConnectionPolicy": {
+          "type": "string",
+          "enum": [
+            "Yes",
+            "No",
+            "ProxyOnly",
+            "VPNOnly",
+            "Restricted"
+          ]
+        }
+      }
+    },
+
+    "dataGovernance": {
+      "type": "object",
+      "properties": {
+        "agreementsExist": { "type": "boolean" },
+        "agreementsDetails": { "type": "string" },
+        "modelUpdatesAllowed": {
+          "type": "string",
+          "enum": [
+            "Yes",
+            "AfterDifferentialPrivacy",
+            "AfterEncryption",
+            "No"
+          ]
+        },
+        "requiresPerRoundApproval": { "type": "boolean" },
+        "restrictedDataCategories": { "type": "string" }
+      }
+    },
+
+    "retentionRevocation": {
+      "type": "object",
+      "properties": {
+        "revocationPossible": { "type": "string", "enum": ["Yes", "No", "Unknown"] },
+        "requiresUnlearning": {
+          "type": "string",
+          "enum": ["Yes", "No", "CaseByCase"]
+        },
+        "retentionPeriod": { "type": "string" }
+      }
+    },
+
+    "additionalNotes": { "type": "string" }
+  },
+
+  "required": ["organization"]
+}

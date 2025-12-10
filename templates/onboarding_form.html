@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Onboarding · {{ project.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="h4 mb-0">Join Project: {{ project.title }}</h1>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if error %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+        <p class="text-muted">Please complete the onboarding questionnaire to request participation. Your answers will be reviewed by the project owner.</p>
+        <form method="post" action="{{ url_for('onboarding', project_id=project.id) }}">
+          {% for section in questionnaire.sections %}
+            <div class="mb-4">
+              <h5 class="mb-3">{{ section.title }}</h5>
+              {% for q in section.questions %}
+                {% set fid = q.id.replace('.', '__') %}
+                <div class="mb-3">
+                  <label class="form-label">{{ q.text }}{% if q.required %} <span class="text-danger">*</span>{% endif %}</label>
+
+                  {% if q.type in ['text', 'email'] %}
+                    <input type="{{ q.type }}" class="form-control" name="{{ fid }}" />
+
+                  {% elif q.type == 'textarea' %}
+                    <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+
+                  {% elif q.type == 'radio' %}
+                    <div>
+                      {% for opt in q.options %}
+                        {% set oid = fid + '_' + loop.index|string %}
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="{{ fid }}" id="{{ oid }}" value="{{ opt }}">
+                          <label class="form-check-label" for="{{ oid }}">{{ opt }}</label>
+                        </div>
+                      {% endfor %}
+                      {% if q.otherOption %}
+                        <div class="input-group input-group-sm mt-2" style="max-width: 400px;">
+                          <span class="input-group-text">Other</span>
+                          <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                        </div>
+                      {% endif %}
+                    </div>
+
+                  {% elif q.type == 'multiselect' %}
+                    <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(5) }}">
+                      {% for opt in q.options %}
+                        <option value="{{ opt }}">{{ opt }}</option>
+                      {% endfor %}
+                    </select>
+                    {% if q.otherOption %}
+                      <div class="input-group input-group-sm mt-2" style="max-width: 400px;">
+                        <span class="input-group-text">Other</span>
+                        <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                      </div>
+                    {% endif %}
+
+                  {% else %}
+                    <input type="text" class="form-control" name="{{ fid }}" />
+                  {% endif %}
+
+                </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

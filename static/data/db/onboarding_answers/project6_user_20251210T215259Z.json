@@ -1,0 +1,65 @@
+{
+  "project_id": "project6",
+  "username": "user",
+  "submitted_at": "20251210T215259Z",
+  "answers": {
+    "org.name": "Org1",
+    "org.jurisdictions": [
+      "EU"
+    ],
+    "org.primaryContact.name": "Natallia Kokash",
+    "org.primaryContact.role": "",
+    "org.primaryContact.email": "natallia.kokash@gmail.com",
+    "org.primaryContact.phone": "000000",
+    "org.dpo.name": "",
+    "org.dpo.role": "",
+    "org.dpo.email": "",
+    "data.types": [
+      "Claims or administrative billing data"
+    ],
+    "data.humanResearch": "Yes",
+    "data.humanSamples": "Yes",
+    "data.ethicalApproval": "Yes",
+    "data.retrospective": "Yes",
+    "data.broadConsent": "Yes",
+    "id.personalData": "Yes",
+    "id.directIdentifiers": "",
+    "id.quasiIdentifiers": "No",
+    "id.identifiableSignals": "Yes",
+    "id.maskingMethods": "Test",
+    "id.processingLevel": "Pseudonymized",
+    "ethics.irbApproval": "No",
+    "ethics.irbDetails": "pp",
+    "ethics.legalBasis": [
+      "Public interest in scientific research",
+      "Legitimate interest",
+      "Contractual obligations"
+    ],
+    "ethics.consentFL": "No",
+    "ethics.useRestrictions": "",
+    "security.hosting": [
+      "Private cloud",
+      "Public cloud",
+      "Hospital secure enclave"
+    ],
+    "security.certifications": [
+      "HIPAA compliance",
+      "NEN 7510",
+      "SOC 2"
+    ],
+    "security.accessControl": [
+      "Unsure"
+    ],
+    "security.auditLogging": "No",
+    "security.network": "Only via VPN",
+    "gov.agreements": "Yes",
+    "gov.agreementDetails": "",
+    "gov.modelUpdates": "Only after differential privacy",
+    "gov.trainingApproval": "No",
+    "gov.restrictedCategories": "",
+    "rights.revokeConsent": "Unknown",
+    "rights.machineUnlearning": "No",
+    "rights.retentionPeriod": "",
+    "notes.freeText": ""
+  }
+}

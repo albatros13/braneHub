@@ -1,0 +1,63 @@
+{
+  "project_id": "project6",
+  "username": "user",
+  "submitted_at": "20251210T213324Z",
+  "answers": {
+    "org.name": "NK Research",
+    "org.jurisdictions": [],
+    "org.primaryContact.name": "Natallia Kokash",
+    "org.primaryContact.role": "",
+    "org.primaryContact.email": "natallia.kokash@gmail.com",
+    "org.primaryContact.phone": "062000000",
+    "org.dpo.name": "Alison Protector",
+    "org.dpo.role": "",
+    "org.dpo.email": "",
+    "data.types": [
+      "Pathology images",
+      "Genomic or other omics datasets",
+      "Laboratory test results"
+    ],
+    "data.humanResearch": "No",
+    "data.humanSamples": "No",
+    "data.ethicalApproval": "No",
+    "data.retrospective": "Yes",
+    "data.broadConsent": "No",
+    "id.personalData": "No",
+    "id.directIdentifiers": "No",
+    "id.quasiIdentifiers": "No",
+    "id.identifiableSignals": "",
+    "id.maskingMethods": "s",
+    "id.processingLevel": "Pseudonymized",
+    "ethics.irbApproval": "",
+    "ethics.irbDetails": "",
+    "ethics.legalBasis": [
+      "Broad consent",
+      "Public interest in scientific research",
+      "Legitimate interest"
+    ],
+    "ethics.consentFL": "No",
+    "ethics.useRestrictions": "",
+    "security.hosting": [
+      "On-premise servers",
+      "Private cloud",
+      "Public cloud"
+    ],
+    "security.certifications": [
+      "Other"
+    ],
+    "security.accessControl": [
+      "Attribute-Based Access Control (ABAC)"
+    ],
+    "security.auditLogging": "Conditional",
+    "security.network": "Only via proxy",
+    "gov.agreements": "No",
+    "gov.agreementDetails": "",
+    "gov.modelUpdates": "Only after differential privacy",
+    "gov.trainingApproval": "",
+    "gov.restrictedCategories": "",
+    "rights.revokeConsent": "Unknown",
+    "rights.machineUnlearning": "Yes",
+    "rights.retentionPeriod": "",
+    "notes.freeText": ""
+  }
+}

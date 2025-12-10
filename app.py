@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, abort
 from functools import wraps
+from datetime import datetime
 import json
 import os
 
@@ -67,6 +68,32 @@ def save_registry():
 
 # Load data at startup
 load_registry()
+
+# --- Onboarding requests helpers ---
+
+def load_onboarding_requests():
+    req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
+    try:
+        with open(req_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            return []
+    except FileNotFoundError:
+        return []
+    except Exception as e:
+        print(f"Warning: failed to load onboarding requests: {e}")
+        return []
+
+
+def save_onboarding_requests(records):
+    req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
+    try:
+        os.makedirs(os.path.dirname(req_path), exist_ok=True)
+        with open(req_path, 'w', encoding='utf-8') as f:
+            json.dump(records, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Warning: failed to save onboarding requests: {e}")
 
 
 def login_required(view_func):
@@ -220,22 +247,10 @@ def fdp_new():
 @app.route('/join/<project_id>', methods=['POST'])
 @login_required
 def join_project(project_id):
-    username = session['user']
-    # Ensure project exists
+    # Instead of directly joining, redirect to onboarding questionnaire
     if not any(str(p.get('id')) == str(project_id) for p in projects_catalog):
         return redirect(url_for('dashboard'))
-
-    # Add to user's projects
-    user_projects.setdefault(username, [])
-    if project_id not in user_projects[username]:
-        user_projects[username].append(project_id)
-
-    # Track participants per project
-    project_participants.setdefault(project_id, [])
-    if username not in project_participants[project_id]:
-        project_participants[project_id].append(username)
-
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('onboarding', project_id=project_id))
 
 
 if __name__ == '__main__':
@@ -254,7 +269,126 @@ def project_manage(project_id):
     username = session['user']
     is_owner = (project.get('owner') == username)
     participants = project_participants.get(project_id, [])
-    return render_template('project_manage.html', project=project, participants=participants, is_owner=is_owner)
+
+    # Load onboarding requests for this project (owner-only view)
+    project_reqs = []
+    if is_owner:
+        all_reqs = load_onboarding_requests()
+        for idx, rec in enumerate(all_reqs):
+            if str(rec.get('project_id')) != str(project_id):
+                continue
+            project_reqs.append({
+                **rec,
+                '_id': idx,
+            })
+        # Sort: pending first, then by submitted_at desc
+        def sort_key(r):
+            pri = {'submitted': 0, 'accepted': 1, 'rejected': 1}.get(r.get('status', 'submitted'), 1)
+            return (pri, r.get('submitted_at', ''),)
+        project_reqs.sort(key=lambda r: ( {'submitted':0,'accepted':1,'rejected':1}.get(r.get('status','submitted'),1), r.get('submitted_at','') ), reverse=False)
+
+    return render_template('project_manage.html', project=project, participants=participants, is_owner=is_owner, project_requests=project_reqs)
+
+
+@app.route('/onboarding/<project_id>', methods=['GET', 'POST'])
+@login_required
+def onboarding(project_id):
+    # Ensure project exists
+    project = next((p for p in projects_catalog if str(p.get('id')) == str(project_id)), None)
+    if not project:
+        return redirect(url_for('dashboard'))
+
+    # Load questionnaire definition
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'fl_onboarding_questionnaire.json')
+    try:
+        with open(q_path, 'r', encoding='utf-8') as f:
+            questionnaire = json.load(f)
+    except Exception as e:
+        questionnaire = {"title": "Onboarding Questionnaire", "sections": []}
+
+    error = None
+    if request.method == 'POST':
+        # Collect answers from the posted form
+        answers = {}
+        for section in questionnaire.get('sections', []):
+            for q in section.get('questions', []):
+                qid = q.get('id')
+                qtype = q.get('type')
+                if not qid:
+                    continue
+                form_key = qid.replace('.', '__')
+                if qtype in ['text', 'email', 'textarea', 'radio']:
+                    val = request.form.get(form_key, '').strip()
+                    answers[qid] = val
+                elif qtype == 'multiselect':
+                    vals = request.form.getlist(form_key)
+                    # Handle optional other input
+                    other_enabled = q.get('otherOption')
+                    other_key = form_key + '__other'
+                    other_val = request.form.get(other_key, '').strip() if other_enabled else ''
+                    if other_val:
+                        vals.append(other_val)
+                    answers[qid] = vals
+                else:
+                    # Fallback to string
+                    answers[qid] = request.form.get(form_key, '').strip()
+
+        # Minimal validation: require org.name and org.primaryContact.email if present in questionnaire
+        req_org = answers.get('org.name', '')
+        req_email = answers.get('org.primaryContact.email', '')
+        if not req_org or not req_email or ('@' not in req_email):
+            error = 'Please provide your organization name and a valid primary contact email.'
+        else:
+            # Persist answers to a timestamped JSON file
+            ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+            username = session['user']
+            ans_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_answers')
+            os.makedirs(ans_dir, exist_ok=True)
+            ans_filename = f"{project_id}_{username}_{ts}.json"
+            ans_path = os.path.join(ans_dir, ans_filename)
+            payload = {
+                'project_id': project_id,
+                'username': username,
+                'submitted_at': ts,
+                'answers': answers
+            }
+            try:
+                with open(ans_path, 'w', encoding='utf-8') as f:
+                    json.dump(payload, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                error = f"Failed to save answers: {e}"
+
+            if not error:
+                # Append a record to onboarding_requests.json
+                req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
+                record = {
+                    'project_id': project_id,
+                    'username': username,
+                    'submitted_at': ts,
+                    'answers_file': os.path.relpath(ans_path, os.path.dirname(__file__)).replace('\\', '/') ,
+                    'status': 'submitted'
+                }
+                try:
+                    # Ensure parent directory exists
+                    os.makedirs(os.path.dirname(req_path), exist_ok=True)
+                    if os.path.exists(req_path):
+                        with open(req_path, 'r', encoding='utf-8') as f:
+                            existing = json.load(f)
+                            if not isinstance(existing, list):
+                                existing = []
+                    else:
+                        existing = []
+                    existing.append(record)
+                    with open(req_path, 'w', encoding='utf-8') as f:
+                        json.dump(existing, f, ensure_ascii=False, indent=2)
+                except Exception as e:
+                    error = f"Failed to register onboarding request: {e}"
+
+            if not error:
+                # Optionally, do not auto-join; keep as pending. Redirect to dashboard with info.
+                return redirect(url_for('dashboard'))
+
+    return render_template('onboarding_form.html', project=project, questionnaire=questionnaire, error=error)
 
 
 @app.route('/project/<project_id>/edit', methods=['POST'])
@@ -322,3 +456,99 @@ def project_delete(project_id):
 
     save_registry()
     return redirect(url_for('dashboard'))
+
+
+# ---------------- Onboarding Requests Panel ----------------
+@app.route('/requests')
+@login_required
+def onboarding_requests():
+    username = session['user']
+    all_reqs = load_onboarding_requests()
+    # Annotate requests with indices and project title
+    annotated = []
+    for idx, rec in enumerate(all_reqs):
+        proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+        if not proj:
+            continue
+        if proj.get('owner') != username:
+            continue
+        annotated.append({
+            **rec,
+            '_id': idx,
+            'project_title': proj.get('title'),
+        })
+    # Sort: pending first
+    annotated.sort(key=lambda r: {'submitted': 0, 'accepted': 1, 'rejected': 1}.get(r.get('status','submitted'), 1))
+    return render_template('onboarding_requests.html', requests=annotated)
+
+
+@app.route('/requests/<int:req_id>')
+@login_required
+def onboarding_request_detail(req_id):
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    # Authorization: only owner of referenced project
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    # Load answers file
+    answers = {}
+    answers_path = rec.get('answers_file')
+    if answers_path:
+        try:
+            # answers_file is relative to repo root (app dir). Build absolute path
+            abs_path = os.path.join(os.path.dirname(__file__), answers_path.replace('/', os.sep))
+            with open(abs_path, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+                answers = payload.get('answers', {})
+        except Exception as e:
+            answers = {'_error': f'Failed to load answers: {e}'}
+
+    return render_template('onboarding_request_detail.html', req={**rec, '_id': req_id}, project=proj, answers=answers)
+
+
+@app.route('/requests/<int:req_id>/decide', methods=['POST'])
+@login_required
+def onboarding_request_decide(req_id):
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    decision = request.form.get('decision', '').strip().lower()  # 'accept' or 'reject'
+    reason = request.form.get('reason', '').strip()
+
+    if decision == 'accept':
+        rec['status'] = 'accepted'
+        rec['rejection_reason'] = ''
+        # Add participant to project
+        pid = str(proj.get('id'))
+        project_participants.setdefault(pid, [])
+        if rec.get('username') and rec['username'] not in project_participants[pid]:
+            project_participants[pid].append(rec['username'])
+        save_registry()
+    elif decision == 'reject':
+        rec['status'] = 'rejected'
+        rec['rejection_reason'] = reason
+    else:
+        # no-op -> back to detail
+        return redirect(url_for('onboarding_request_detail', req_id=req_id))
+
+    rec['decided_at'] = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+    rec['decided_by'] = session['user']
+
+    # Persist
+    all_reqs[req_id] = rec
+    save_onboarding_requests(all_reqs)
+
+    return redirect(url_for('onboarding_request_detail', req_id=req_id))

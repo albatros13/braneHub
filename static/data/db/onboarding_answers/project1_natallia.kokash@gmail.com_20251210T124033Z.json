@@ -1,0 +1,67 @@
+{
+  "project_id": "project1",
+  "username": "natallia.kokash@gmail.com",
+  "submitted_at": "20251210T124033Z",
+  "answers": {
+    "org.name": "UvA",
+    "org.jurisdictions": [
+      "Other",
+      "China"
+    ],
+    "org.primaryContact.name": "Natallia Kokash",
+    "org.primaryContact.role": "Researcher",
+    "org.primaryContact.email": "natallia.kokash@gmail.com",
+    "org.primaryContact.phone": "XXX",
+    "org.dpo.name": "Alison Protector",
+    "org.dpo.role": "",
+    "org.dpo.email": "",
+    "data.types": [
+      "Diagnostic imaging (CT, MRI, X-ray, etc.)",
+      "Pathology images",
+      "Genomic or other omics datasets",
+      "Laboratory test results",
+      "Claims or administrative billing data"
+    ],
+    "data.humanResearch": "Yes",
+    "data.humanSamples": "No",
+    "data.ethicalApproval": "No",
+    "data.retrospective": "Yes",
+    "data.broadConsent": "Unsure",
+    "id.personalData": "No",
+    "id.directIdentifiers": "No",
+    "id.quasiIdentifiers": "No",
+    "id.identifiableSignals": "No",
+    "id.maskingMethods": "",
+    "id.processingLevel": "Pseudonymized",
+    "ethics.irbApproval": "Yes",
+    "ethics.irbDetails": "",
+    "ethics.legalBasis": [
+      "Broad consent",
+      "Public interest in scientific research"
+    ],
+    "ethics.consentFL": "No",
+    "ethics.useRestrictions": "",
+    "security.hosting": [
+      "Private cloud",
+      "Public cloud",
+      "Hospital secure enclave"
+    ],
+    "security.certifications": [
+      "NEN 7510"
+    ],
+    "security.accessControl": [
+      "Unsure"
+    ],
+    "security.auditLogging": "",
+    "security.network": "Only via proxy",
+    "gov.agreements": "No",
+    "gov.agreementDetails": "",
+    "gov.modelUpdates": "Only after differential privacy",
+    "gov.trainingApproval": "Yes",
+    "gov.restrictedCategories": "",
+    "rights.revokeConsent": "No",
+    "rights.machineUnlearning": "Case-by-case",
+    "rights.retentionPeriod": "",
+    "notes.freeText": ""
+  }
+}
