@@ -47,9 +47,6 @@
       "NEN 7510",
       "SOC 2"
     ],
-    "security.accessControl": [
-      "Unsure"
-    ],
     "security.auditLogging": "No",
     "security.network": "Only via VPN",
     "gov.agreements": "Yes",

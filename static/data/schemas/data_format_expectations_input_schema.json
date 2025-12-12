@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expected/Preferred Data Formats (Owner) – Answers",
+  "type": "object",
+  "properties": {
+    "storage": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "databases": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "apis_streams": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "object_store": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "contracts": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "other": { "type": "string" }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "methods": {
+          "type": "object",
+          "properties": {
+            "acceptable": { "type": "array", "items": { "type": "string" } },
+            "conditional": { "type": "array", "items": { "type": "string" } },
+            "not_acceptable": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "meta": { "type": "object" }
+  }
+}

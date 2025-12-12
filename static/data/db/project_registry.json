@@ -116,6 +116,38 @@
         "legal_basis_for_processing": "",
         "third_party_collaboration": false
       }
+    },
+    {
+      "id": "project7",
+      "title": "AI model to recognize abnormal lung MRI scans",
+      "owner": "main",
+      "tags": [
+        "fdp",
+        "imaging",
+        "wearables",
+        "lab results"
+      ],
+      "type": "FDP",
+      "fdp": {
+        "research_institution": "UvA",
+        "contact_email": "natallia.kokash@gmail.com",
+        "study_objective": "Bla-bla",
+        "data_types_required": [
+          "Imaging",
+          "Wearables",
+          "Lab Results"
+        ],
+        "data_sensitivity_level": "High",
+        "security_measures_planned": [
+          "Encryption",
+          "Secure Containers",
+          "Pseudonymization"
+        ],
+        "result_sharing_policy": "Scientific publishing",
+        "participant_responsibilities": "Adherance to GDPR and your own organizational security protocols",
+        "legal_basis_for_processing": "HIPAA TPO",
+        "third_party_collaboration": true
+      }
     }
   ],
   "project_participants": {
@@ -137,6 +169,9 @@
     "project6": [
       "main",
       "user"
+    ],
+    "project7": [
+      "main"
     ]
   },
   "users": [

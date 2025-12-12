@@ -111,18 +111,6 @@
           "otherOption": true
         },
         {
-          "id": "security.accessControl",
-          "text": "Preferred access control model",
-          "type": "multiselect",
-          "options": [
-            "Role-Based Access Control (RBAC)",
-            "Attribute-Based Access Control (ABAC)",
-            "Consent-aware access control",
-            "Policy-based control (XACML/Rego/OPA)",
-            "Unsure"
-          ]
-        },
-        {
           "id": "security.auditLogging",
           "text": "Do you require audit logging of model requests or parameters exchanged?",
           "type": "radio",
@@ -171,7 +159,6 @@
     }
   ],
   "meta": {
-    "source": "static/data/policies/fl_onboarding.txt",
     "generatedFrom": "fl_onboarding_document.md",
     "generatedAt": "2025-12-10T12:53:00"
   }

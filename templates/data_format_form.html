@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% block title %}Data Format · {{ project.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="h4 mb-0">Describe Data Format for: {{ project.title }}</h1>
+      <a href="{{ url_for('onboarding', project_id=project.id) }}" class="btn btn-outline-secondary">Back to Onboarding</a>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if error %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% else %}
+          <p class="text-muted">Select which storage options apply. Tabs will appear for the selected options so you only fill relevant questions.</p>
+        {% endif %}
+
+        <form method="post" action="{{ form_action }}">
+          {# Render the selector section #}
+          {% set selector = (questionnaire.sections | selectattr('id','equalto','storage_selector') | list) %}
+          {% if selector and selector[0].questions %}
+            {% set section = selector[0] %}
+            <div class="mb-4">
+              <h5 class="mb-2">{{ section.title }}</h5>
+              {% for q in section.questions %}
+                {% set fid = q.id.replace('.', '__') %}
+                <div class="mb-3">
+                  <label class="form-label">{{ q.text }}{% if q.required %} <span class="text-danger">*</span>{% endif %}</label>
+                  {% if q.type == 'multiselect' %}
+                    <select id="storageUsedSelect" name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length) or 4 }}">
+                      {% for opt in q.options %}
+                        <option value="{{ opt }}">{{ opt }}</option>
+                      {% endfor %}
+                    </select>
+                  {% else %}
+                    <input type="text" name="{{ fid }}" class="form-control" />
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {# Tabs for selected storage options #}
+          <ul class="nav nav-pills mb-3" id="storageTabs" role="tablist"></ul>
+          <div class="tab-content" id="storageTabContent">
+            {# Files tab pane #}
+            {% set files_sec = (questionnaire.sections | selectattr('id','equalto','files') | list) %}
+            {% if files_sec %}
+              <div class="tab-pane fade" id="tab-files" role="tabpanel" aria-labelledby="tab-files-tab">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3">{{ files_sec[0].title }}</h6>
+                  {% for q in files_sec[0].questions %}
+                    {% set fid = q.id.replace('.', '__') %}
+                    <div class="mb-3">
+                      <label class="form-label">{{ q.text }}</label>
+                      {% if q.type == 'multiselect' %}
+                        <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(6) }}">
+                          {% for opt in q.options %}
+                            <option value="{{ opt }}">{{ opt }}</option>
+                          {% endfor %}
+                        </select>
+                        {% if q.otherOption %}
+                          <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                            <span class="input-group-text">Other</span>
+                            <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                          </div>
+                        {% endif %}
+                      {% elif q.type == 'textarea' %}
+                        <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+                      {% else %}
+                        <input type="text" class="form-control" name="{{ fid }}" />
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# Databases tab pane #}
+            {% set db_sec = (questionnaire.sections | selectattr('id','equalto','databases') | list) %}
+            {% if db_sec %}
+              <div class="tab-pane fade" id="tab-databases" role="tabpanel" aria-labelledby="tab-databases-tab">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3">{{ db_sec[0].title }}</h6>
+                  {% for q in db_sec[0].questions %}
+                    {% set fid = q.id.replace('.', '__') %}
+                    <div class="mb-3">
+                      <label class="form-label">{{ q.text }}</label>
+                      {% if q.type == 'multiselect' %}
+                        <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(6) }}">
+                          {% for opt in q.options %}
+                            <option value="{{ opt }}">{{ opt }}</option>
+                          {% endfor %}
+                        </select>
+                        {% if q.otherOption %}
+                          <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                            <span class="input-group-text">Other</span>
+                            <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                          </div>
+                        {% endif %}
+                      {% elif q.type == 'textarea' %}
+                        <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+                      {% else %}
+                        <input type="text" class="form-control" name="{{ fid }}" />
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# APIs/Streams tab pane #}
+            {% set api_sec = (questionnaire.sections | selectattr('id','equalto','apis_streams') | list) %}
+            {% if api_sec %}
+              <div class="tab-pane fade" id="tab-apis" role="tabpanel" aria-labelledby="tab-apis-tab">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3">{{ api_sec[0].title }}</h6>
+                  {% for q in api_sec[0].questions %}
+                    {% set fid = q.id.replace('.', '__') %}
+                    <div class="mb-3">
+                      <label class="form-label">{{ q.text }}</label>
+                      {% if q.type == 'multiselect' %}
+                        <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(6) }}">
+                          {% for opt in q.options %}
+                            <option value="{{ opt }}">{{ opt }}</option>
+                          {% endfor %}
+                        </select>
+                        {% if q.otherOption %}
+                          <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                            <span class="input-group-text">Other</span>
+                            <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                          </div>
+                        {% endif %}
+                      {% elif q.type == 'textarea' %}
+                        <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+                      {% else %}
+                        <input type="text" class="form-control" name="{{ fid }}" />
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# Object storage tab pane #}
+            {% set obj_sec = (questionnaire.sections | selectattr('id','equalto','object_store') | list) %}
+            {% if obj_sec %}
+              <div class="tab-pane fade" id="tab-object" role="tabpanel" aria-labelledby="tab-object-tab">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3">{{ obj_sec[0].title }}</h6>
+                  {% for q in obj_sec[0].questions %}
+                    {% set fid = q.id.replace('.', '__') %}
+                    <div class="mb-3">
+                      <label class="form-label">{{ q.text }}</label>
+                      {% if q.type == 'multiselect' %}
+                        <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(6) }}">
+                          {% for opt in q.options %}
+                            <option value="{{ opt }}">{{ opt }}</option>
+                          {% endfor %}
+                        </select>
+                        {% if q.otherOption %}
+                          <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                            <span class="input-group-text">Other</span>
+                            <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                          </div>
+                        {% endif %}
+                      {% elif q.type == 'textarea' %}
+                        <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+                      {% else %}
+                        <input type="text" class="form-control" name="{{ fid }}" />
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          {# Storage general section (always visible) #}
+          {% set sgen = (questionnaire.sections | selectattr('id','equalto','storage_general') | list) %}
+          {% if sgen %}
+            <div class="mb-4 mt-3">
+              <h5 class="mb-2">{{ sgen[0].title }}</h5>
+              {% for q in sgen[0].questions %}
+                {% set fid = q.id.replace('.', '__') %}
+                <div class="mb-3">
+                  <label class="form-label">{{ q.text }}</label>
+                  {% if q.type == 'textarea' %}
+                    <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+                  {% else %}
+                    <input type="text" class="form-control" name="{{ fid }}" />
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {# Remaining standard sections below #}
+          {% for section in questionnaire.sections %}
+            {% if section.id not in ['storage_selector','files','databases','apis_streams','object_store','storage_general'] %}
+              <div class="mb-4">
+                <h5 class="mb-3">{{ section.title }}</h5>
+                {% for q in section.questions %}
+                  {% set fid = q.id.replace('.', '__') %}
+                  <div class="mb-3">
+                    <label class="form-label">{{ q.text }}{% if q.required %} <span class="text-danger">*</span>{% endif %}</label>
+
+                    {% if q.type in ['text', 'email'] %}
+                      <input type="{{ q.type }}" class="form-control" name="{{ fid }}" />
+
+                    {% elif q.type == 'textarea' %}
+                      <textarea class="form-control" name="{{ fid }}" rows="3"></textarea>
+
+                    {% elif q.type == 'radio' %}
+                      <div>
+                        {% for opt in q.options %}
+                          {% set oid = fid + '_' + loop.index|string %}
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="{{ fid }}" id="{{ oid }}" value="{{ opt }}">
+                            <label class="form-check-label" for="{{ oid }}">{{ opt }}</label>
+                          </div>
+                        {% endfor %}
+                        {% if q.otherOption %}
+                          <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                            <span class="input-group-text">Other</span>
+                            <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                          </div>
+                        {% endif %}
+                      </div>
+
+                    {% elif q.type == 'multiselect' %}
+                      <select name="{{ fid }}" class="form-select" multiple size="{{ (q.options|length)|default(5) }}">
+                        {% for opt in q.options %}
+                          <option value="{{ opt }}">{{ opt }}</option>
+                        {% endfor %}
+                      </select>
+                      {% if q.otherOption %}
+                        <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                          <span class="input-group-text">Other</span>
+                          <input type="text" class="form-control" name="{{ fid }}__other" placeholder="Specify other" />
+                        </div>
+                      {% endif %}
+
+                    {% else %}
+                      <input type="text" class="form-control" name="{{ fid }}" />
+                    {% endif %}
+
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <a href="{{ url_for('onboarding', project_id=project.id) }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="dfSubmitBtn">Save Data Format</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const selectEl = document.getElementById('storageUsedSelect');
+  const tabsEl = document.getElementById('storageTabs');
+  const mapping = {
+    'Files': { id: 'files', tabId: 'tab-files', title: 'Files' },
+    'Databases': { id: 'databases', tabId: 'tab-databases', title: 'Databases' },
+    'APIs/Streams': { id: 'apis_streams', tabId: 'tab-apis', title: 'APIs/Streams' },
+    'Object storage': { id: 'object_store', tabId: 'tab-object', title: 'Object storage' }
+  };
+  const panes = {
+    'tab-files': document.getElementById('tab-files'),
+    'tab-databases': document.getElementById('tab-databases'),
+    'tab-apis': document.getElementById('tab-apis'),
+    'tab-object': document.getElementById('tab-object')
+  };
+
+  function currentSelection(){
+    return Array.from(selectEl?.selectedOptions || []).map(o=>o.value);
+  }
+
+  function rebuildTabs(){
+    const sel = currentSelection();
+    tabsEl.innerHTML = '';
+    let firstTabId = null;
+    sel.forEach((label, idx)=>{
+      const map = mapping[label];
+      if (!map) return;
+      const li = document.createElement('li');
+      li.className = 'nav-item';
+      const btn = document.createElement('button');
+      btn.className = 'nav-link' + (firstTabId ? '' : ' active');
+      btn.id = map.tabId + '-tab';
+      btn.dataset.bsToggle = 'tab';
+      btn.dataset.bsTarget = '#' + map.tabId;
+      btn.type = 'button';
+      btn.role = 'tab';
+      btn.ariaControls = map.tabId;
+      btn.ariaSelected = (!firstTabId).toString();
+      btn.textContent = map.title;
+      li.appendChild(btn);
+      tabsEl.appendChild(li);
+      if (!firstTabId) firstTabId = map.tabId;
+    });
+    // Show only selected panes
+    Object.keys(panes).forEach(pid=>{
+      const isSelected = sel.some(label => mapping[label]?.tabId === pid);
+      panes[pid]?.classList.remove('show','active');
+      if (!isSelected){
+        panes[pid]?.classList.remove('show','active');
+      }
+    });
+    // Activate first if exists
+    if (firstTabId){
+      const firstPane = panes[firstTabId];
+      if (firstPane){ firstPane.classList.add('show','active'); }
+    }
+  }
+
+  selectEl?.addEventListener('change', rebuildTabs);
+  // Initialize with no selection -> no tabs; user picks to show panes
+  rebuildTabs();
+})();
+</script>
+{% endblock %}

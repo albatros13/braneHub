@@ -45,9 +45,6 @@
     "security.certifications": [
       "Other"
     ],
-    "security.accessControl": [
-      "Attribute-Based Access Control (ABAC)"
-    ],
     "security.auditLogging": "Conditional",
     "security.network": "Only via proxy",
     "gov.agreements": "No",

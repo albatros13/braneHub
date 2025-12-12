@@ -32,5 +32,12 @@
     "rejection_reason": "Data irrelevant",
     "decided_at": "20251210T215402Z",
     "decided_by": "main"
+  },
+  {
+    "project_id": "project2",
+    "username": "main",
+    "submitted_at": "20251211T154553Z",
+    "answers_file": "static/data/db/onboarding_answers/project2_main_20251211T154553Z.json",
+    "status": "submitted"
   }
 ]

@@ -1,12 +1,32 @@
-from flask import Flask, render_template, request, redirect, url_for, session, abort
+from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify
 from functools import wraps
 from datetime import datetime
 import json
 import os
+import re
 
 app = Flask(__name__)
 # NOTE: Replace this with a secure random value in production
 app.secret_key = 'dev-secret-key-change-me'
+
+# --- AI Assistant dependencies ---
+# OpenAI (optional)
+try:
+    from api.openai_client import llm_client as openai_llm_client
+except Exception as _e:
+    openai_llm_client = None
+
+# Anthropic (optional)
+try:
+    from api.anthropic_client import llm_client as anthropic_llm_client
+except Exception:
+    anthropic_llm_client = None
+
+# Qdrant is optional; we only use it if available and configured
+try:
+    from api.qdrant_remote_client import get_remote_client as get_qdrant_client
+except Exception:
+    get_qdrant_client = None
 
 # In-memory stores initialized from registry file
 users = {}  # username -> {password: str}
@@ -68,6 +88,50 @@ def save_registry():
 
 # Load data at startup
 load_registry()
+
+# --- Assistant helpers ---
+
+def sanitize_filename(name: str) -> str:
+    name = name.strip().replace(' ', '_')
+    # allow letters, numbers, dash, underscore, dot
+    name = re.sub(r"[^A-Za-z0-9._-]", "", name)
+    # prevent path traversal
+    name = name.replace('..', '')
+    return name or f"artifact_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}"
+
+
+def get_embeddings(text: str):
+    # Embeddings supported via OpenAI only (optional)
+    if openai_llm_client is None:
+        return None
+    try:
+        resp = openai_llm_client.embeddings.create(model=os.getenv('EMBEDDINGS_MODEL', 'text-embedding-3-small'), input=text)
+        return resp.data[0].embedding
+    except Exception as e:
+        print(f"Embeddings error: {e}")
+        return None
+
+
+def qdrant_search(query: str, collection: str = None, limit: int = 5):
+    collection = collection or os.getenv('QDRANT_COLLECTION', 'compliance_docs')
+    if get_qdrant_client is None:
+        return []
+    vec = get_embeddings(query)
+    if not vec:
+        return []
+    try:
+        client = get_qdrant_client()
+        hits = client.search(collection_name=collection, query_vector=vec, limit=limit)
+        contexts = []
+        for h in hits:
+            payload = getattr(h, 'payload', {}) or {}
+            text = payload.get('text') or payload.get('content') or ''
+            meta = {k: v for k, v in payload.items() if k not in ('text', 'content')}
+            contexts.append({'text': text, 'meta': meta, 'score': getattr(h, 'score', None)})
+        return contexts
+    except Exception as e:
+        print(f"Qdrant search error: {e}")
+        return []
 
 # --- Onboarding requests helpers ---
 
@@ -156,10 +220,40 @@ def logout():
 @login_required
 def dashboard():
     username = session['user']
-    own_ids = set(user_projects.get(username, [])) | {p_id for p_id, members in project_participants.items() if username in members}
-    own_list = [p for p in projects_catalog if p['id'] in own_ids]
-    explore_list = [p for p in projects_catalog if p['id'] not in own_ids]
-    return render_template('dashboard.html', username=username, own_projects=own_list, explore_projects=explore_list, participants=project_participants)
+    # Projects owned by the user only
+    owned_list = [p for p in projects_catalog if p.get('owner') == username]
+
+    # Load this user's onboarding requests with status and project title
+    requests = []
+    try:
+        all_reqs = load_onboarding_requests()
+        for idx, rec in enumerate(all_reqs):
+            if rec.get('username') != username:
+                continue
+            proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+            if not proj:
+                continue
+            requests.append({
+                **rec,
+                '_id': idx,
+                'project_title': proj.get('title'),
+            })
+        # Most recent first; pending at top
+        requests.sort(key=lambda r: ({'submitted': 0, 'accepted': 1, 'rejected': 1}.get(r.get('status','submitted'),1), r.get('submitted_at','')), reverse=False)
+    except Exception:
+        requests = []
+
+    return render_template('dashboard.html', username=username, own_projects=owned_list, user_requests=requests, participants=project_participants)
+
+
+@app.route('/explore')
+@login_required
+def explore_projects():
+    username = session['user']
+    # Exclude projects the user owns or already participates in
+    own_ids = set(user_projects.get(username, [])) | {pid for pid, members in project_participants.items() if username in members}
+    explore_list = [p for p in projects_catalog if p.get('id') not in own_ids]
+    return render_template('explore_projects.html', projects=explore_list)
 
 
 @app.route('/fdp/new', methods=['GET', 'POST'])
@@ -167,10 +261,15 @@ def dashboard():
 def fdp_new():
     username = session['user']
     error = None
-    # Predefined options
-    data_types_options = ['Imaging', 'EHR', 'Genomics', 'Wearables', 'Lab Results']
-    security_measures_options = ['Encryption', 'Secure Containers', 'Access Logs', 'Pseudonymization']
-    legal_basis_options = ['GDPR Consent', 'HIPAA TPO', 'Public Interest', 'Research with Waiver']
+
+    # Load new-project questionnaire config (fields for the form)
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'fl_new_project_questionnaire.json')
+    try:
+        with open(q_path, 'r', encoding='utf-8') as f:
+            new_proj_q = json.load(f)
+    except Exception:
+        # Fallback minimal structure if file missing or invalid
+        new_proj_q = {"title": "New FDP Project", "sections": []}
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -238,10 +337,89 @@ def fdp_new():
     return render_template(
         'fdp_new.html',
         error=error,
-        data_types_options=data_types_options,
-        security_measures_options=security_measures_options,
-        legal_basis_options=legal_basis_options,
+        questionnaire=new_proj_q,
     )
+
+
+@app.route('/fdp/expected-data-format', methods=['GET', 'POST'])
+@login_required
+def fdp_expected_data_format():
+    """Project owner describes expected/preferred data formats.
+    Renders a JSON-driven form and stores results under static/data/db/data_format_expectations.
+    """
+    # Load owner expectations questionnaire
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'data_format_expectations_questionnaire.json')
+    try:
+        with open(q_path, 'r', encoding='utf-8') as f:
+            questionnaire = json.load(f)
+    except Exception:
+        questionnaire = {"title": "Expected Data Formats", "sections": []}
+
+    error = None
+    if request.method == 'POST':
+        # Parse flat answers like other forms
+        answers = {}
+        for section in questionnaire.get('sections', []):
+            for q in section.get('questions', []):
+                qid = q.get('id'); qtype = q.get('type')
+                if not qid:
+                    continue
+                form_key = qid.replace('.', '__')
+                if qtype in ['text', 'email', 'textarea', 'radio']:
+                    val = request.form.get(form_key, '').strip()
+                    answers[qid] = val
+                elif qtype == 'multiselect':
+                    vals = request.form.getlist(form_key)
+                    other_enabled = q.get('otherOption')
+                    other_val = request.form.get(form_key + '__other', '').strip() if other_enabled else ''
+                    if other_val:
+                        vals.append(other_val)
+                    answers[qid] = vals
+                else:
+                    answers[qid] = request.form.get(form_key, '').strip()
+
+        # Build structured expectations by splitting on '.' after the 'expect' prefix
+        structured = {}
+        for k, v in answers.items():
+            parts = k.split('.')
+            # Expect keys like expect.storage.files.acceptable
+            if len(parts) >= 3 and parts[0] == 'expect':
+                grp = parts[1]  # storage, schema, delivery
+                structured.setdefault(grp, {})
+                # join the rest into nested keys
+                node = structured[grp]
+                for i in range(2, len(parts)):
+                    p = parts[i]
+                    if i == len(parts) - 1:
+                        node[p] = v
+                    else:
+                        node = node.setdefault(p, {})
+            else:
+                structured.setdefault('meta', {})[k] = v
+
+        # Persist
+        ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        username = session['user']
+        base_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'data_format_expectations')
+        os.makedirs(base_dir, exist_ok=True)
+        fname = f"owner_{username}_{ts}.json"
+        fpath = os.path.join(base_dir, fname)
+        payload = {
+            'username': username,
+            'submitted_at': ts,
+            'answers': answers,
+            'expectations': structured
+        }
+        try:
+            with open(fpath, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            error = f"Failed to save expectations: {e}"
+
+        if not error:
+            return redirect(url_for('fdp_new'))
+
+    return render_template('onboarding_form.html', project={'id': '', 'title': 'New FDP Project'}, questionnaire=questionnaire, error=error, form_action=url_for('fdp_expected_data_format'))
 
 
 @app.route('/join/<project_id>', methods=['POST'])
@@ -299,7 +477,7 @@ def onboarding(project_id):
         return redirect(url_for('dashboard'))
 
     # Load questionnaire definition
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'fl_onboarding_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'fl_onboarding_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             questionnaire = json.load(f)
@@ -333,60 +511,102 @@ def onboarding(project_id):
                     # Fallback to string
                     answers[qid] = request.form.get(form_key, '').strip()
 
-        # Minimal validation: require org.name and org.primaryContact.email if present in questionnaire
-        req_org = answers.get('org.name', '')
-        req_email = answers.get('org.primaryContact.email', '')
-        if not req_org or not req_email or ('@' not in req_email):
-            error = 'Please provide your organization name and a valid primary contact email.'
-        else:
-            # Persist answers to a timestamped JSON file
-            ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
-            username = session['user']
-            ans_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_answers')
-            os.makedirs(ans_dir, exist_ok=True)
-            ans_filename = f"{project_id}_{username}_{ts}.json"
-            ans_path = os.path.join(ans_dir, ans_filename)
-            payload = {
+        # Build nested input object per fl_onboarding_input_schema_full.json
+        def yn_to_bool(v):
+            return True if str(v).strip().lower() in ("yes", "true", "1") else False if str(v).strip().lower() in ("no", "false", "0") else None
+
+        nested_input = {
+            "organization": {
+                "name": (answers.get('organization.name') or None),
+                "primaryContact": {
+                    "name": (answers.get('organization.primaryContact.name') or None),
+                    "role": (answers.get('organization.primaryContact.role') or None),
+                    "email": (answers.get('organization.primaryContact.email') or None),
+                    "phone": (answers.get('organization.primaryContact.phone') or None)
+                },
+                "dpoContact": {
+                    "name": (answers.get('organization.dpoContact.name') or None),
+                    "role": (answers.get('organization.dpoContact.role') or None),
+                    "email": (answers.get('organization.dpoContact.email') or None)
+                },
+                "jurisdictions": answers.get('organization.jurisdictions') or []
+            },
+            "dataNature": {
+                "involvesHumanResearch": yn_to_bool(answers.get('dataNature.involvesHumanResearch')),
+                "retrospectiveConsent": answers.get('dataNature.retrospectiveConsent') or None
+            },
+            "ethicalLegal": {
+                "irbApproval": answers.get('ethicalLegal.irbApproval') or None
+            },
+            "identifiability": {
+                "directIdentifiers": yn_to_bool(answers.get('identifiability.directIdentifiers')),
+                "quasiIdentifiers": yn_to_bool(answers.get('identifiability.quasiIdentifiers')),
+                "processingLevel": answers.get('identifiability.processingLevel') or None
+            },
+            "securityInfrastructure": {
+                "auditLoggingRequired": answers.get('securityInfrastructure.auditLoggingRequired') or None,
+                "networkConnectionPolicy": answers.get('securityInfrastructure.networkConnectionPolicy') or None,
+                "securityCertifications": answers.get('securityInfrastructure.securityCertifications') or []
+            },
+            "dataGovernance": {
+                "agreementsExist": yn_to_bool(answers.get('dataGovernance.agreementsExist')),
+                "modelUpdatesAllowed": answers.get('dataGovernance.modelUpdatesAllowed') or None,
+                "requiresPerRoundApproval": yn_to_bool(answers.get('dataGovernance.requiresPerRoundApproval'))
+            },
+            "retentionRevocation": {
+                "requiresUnlearning": answers.get('retentionRevocation.requiresUnlearning') or None
+            }
+        }
+
+        # Persist answers to a timestamped JSON file
+        ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        username = session['user']
+        ans_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_answers')
+        os.makedirs(ans_dir, exist_ok=True)
+        ans_filename = f"{project_id}_{username}_{ts}.json"
+        ans_path = os.path.join(ans_dir, ans_filename)
+        payload = {
+            'project_id': project_id,
+            'username': username,
+            'submitted_at': ts,
+            'answers': answers,
+            'input': nested_input
+        }
+        try:
+            with open(ans_path, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            error = f"Failed to save answers: {e}"
+
+        if not error:
+            # Append a record to onboarding_requests.json
+            req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
+            record = {
                 'project_id': project_id,
                 'username': username,
                 'submitted_at': ts,
-                'answers': answers
+                'answers_file': os.path.relpath(ans_path, os.path.dirname(__file__)).replace('\\', '/') ,
+                'status': 'submitted'
             }
             try:
-                with open(ans_path, 'w', encoding='utf-8') as f:
-                    json.dump(payload, f, ensure_ascii=False, indent=2)
+                # Ensure parent directory exists
+                os.makedirs(os.path.dirname(req_path), exist_ok=True)
+                if os.path.exists(req_path):
+                    with open(req_path, 'r', encoding='utf-8') as f:
+                        existing = json.load(f)
+                        if not isinstance(existing, list):
+                            existing = []
+                else:
+                    existing = []
+                existing.append(record)
+                with open(req_path, 'w', encoding='utf-8') as f:
+                    json.dump(existing, f, ensure_ascii=False, indent=2)
             except Exception as e:
-                error = f"Failed to save answers: {e}"
+                error = f"Failed to register onboarding request: {e}"
 
-            if not error:
-                # Append a record to onboarding_requests.json
-                req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
-                record = {
-                    'project_id': project_id,
-                    'username': username,
-                    'submitted_at': ts,
-                    'answers_file': os.path.relpath(ans_path, os.path.dirname(__file__)).replace('\\', '/') ,
-                    'status': 'submitted'
-                }
-                try:
-                    # Ensure parent directory exists
-                    os.makedirs(os.path.dirname(req_path), exist_ok=True)
-                    if os.path.exists(req_path):
-                        with open(req_path, 'r', encoding='utf-8') as f:
-                            existing = json.load(f)
-                            if not isinstance(existing, list):
-                                existing = []
-                    else:
-                        existing = []
-                    existing.append(record)
-                    with open(req_path, 'w', encoding='utf-8') as f:
-                        json.dump(existing, f, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    error = f"Failed to register onboarding request: {e}"
-
-            if not error:
-                # Optionally, do not auto-join; keep as pending. Redirect to dashboard with info.
-                return redirect(url_for('dashboard'))
+        if not error:
+            # Optionally, do not auto-join; keep as pending. Redirect to dashboard with info.
+            return redirect(url_for('dashboard'))
 
     return render_template('onboarding_form.html', project=project, questionnaire=questionnaire, error=error)
 
@@ -505,7 +725,19 @@ def onboarding_request_detail(req_id):
             abs_path = os.path.join(os.path.dirname(__file__), answers_path.replace('/', os.sep))
             with open(abs_path, 'r', encoding='utf-8') as f:
                 payload = json.load(f)
-                answers = payload.get('answers', {})
+                # Prefer structured input if available; fall back to flat answers
+                if isinstance(payload.get('input'), dict):
+                    def flatten(prefix, obj, out):
+                        if isinstance(obj, dict):
+                            for k, v in obj.items():
+                                flatten(f"{prefix}.{k}" if prefix else k, v, out)
+                        else:
+                            out[prefix] = v if (v := obj) is not None else ''
+                    flat = {}
+                    flatten('', payload.get('input'), flat)
+                    answers = flat
+                else:
+                    answers = payload.get('answers', {})
         except Exception as e:
             answers = {'_error': f'Failed to load answers: {e}'}
 
@@ -552,3 +784,204 @@ def onboarding_request_decide(req_id):
     save_onboarding_requests(all_reqs)
 
     return redirect(url_for('onboarding_request_detail', req_id=req_id))
+
+
+# ---------------- Assistant API ----------------
+@app.route('/assistant/chat', methods=['POST'])
+@login_required
+def assistant_chat():
+    # Parse payload
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        payload = {}
+    user_message = (payload.get('message') or '').strip()
+    history = payload.get('history') or []  # list of {role, content}
+    use_rag = bool(payload.get('use_rag'))
+    llm_choice = (payload.get('llm') or '').lower()  # 'gpt-5' or 'claude-sonnet'
+    extra_context = (payload.get('extra_context') or '').strip()
+
+    # Choose provider
+    provider = None  # 'openai' or 'anthropic'
+    if llm_choice.startswith('claude'):
+        provider = 'anthropic' if anthropic_llm_client is not None else ('openai' if openai_llm_client is not None else None)
+    else:
+        provider = 'openai' if openai_llm_client is not None else ('anthropic' if anthropic_llm_client is not None else None)
+
+    if provider is None:
+        return jsonify({"error": "No LLM client configured (OpenAI/Anthropic)."}), 500
+
+    system_prompt = (
+        "You are BraneHub's compliance research assistant. Help researchers explore "
+        "compliance requirements for patient data and biomedical research across regions. "
+        "Cite specific regulations (e.g., GDPR, HIPAA) when applicable. Be concise and provide actionable guidance."
+    )
+
+    messages = [{"role": "system", "content": system_prompt}]
+
+    # Add optional RAG and extra context before the user's message
+    rag_contexts = []
+    if user_message and use_rag:
+        rag_contexts = qdrant_search(user_message)
+    if rag_contexts:
+        context_text = "\n\n".join([f"Source {i+1}: {c.get('text','')[:1500]}" for i, c in enumerate(rag_contexts)])
+        messages.append({"role": "system", "content": f"Relevant retrieved context:\n{context_text}"})
+    if extra_context:
+        messages.append({"role": "system", "content": f"Additional questionnaire/specification context provided by the user:\n{extra_context[:4000]}"})
+
+    # Append history safely (limit to last 20 turns)
+    if isinstance(history, list):
+        for m in history[-20:]:
+            if isinstance(m, dict):
+                r = m.get('role'); c = m.get('content')
+                if r in ("user", "assistant") and isinstance(c, str):
+                    messages.append({"role": r, "content": c})
+
+    if user_message:
+        messages.append({"role": "user", "content": user_message})
+
+    try:
+        if provider == 'openai':
+            model = os.getenv('OPENAI_MODEL', 'gpt-5') if llm_choice.startswith('gpt') else os.getenv('OPENAI_MODEL', 'gpt-5')
+            completion = openai_llm_client.chat.completions.create(
+                model=model,
+                messages=messages
+            )
+            reply = completion.choices[0].message.content
+        else:
+            # Anthropic messages format
+            from anthropic import NOT_GIVEN
+            # Convert OpenAI-style to Anthropic-style
+            system_texts = [m['content'] for m in messages if m['role'] == 'system']
+            system_text = "\n\n".join(system_texts) if system_texts else NOT_GIVEN
+            conv_msgs = []
+            for m in messages:
+                if m['role'] == 'system':
+                    continue
+                role = 'user' if m['role'] == 'user' else 'assistant'
+                conv_msgs.append({"role": role, "content": [{"type": "text", "text": m['content']}]})
+            model = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514')
+            resp = anthropic_llm_client.messages.create(
+                model=model,
+                system=system_text,
+                max_tokens=1000,
+                messages=conv_msgs
+            )
+            # Concatenate text blocks from the first message
+            reply = "".join([b.text for b in (resp.content or []) if getattr(b, 'type', '') == 'text'])
+        return jsonify({
+            "reply": reply,
+            "contexts": rag_contexts,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/assistant/save', methods=['POST'])
+@login_required
+def assistant_save():
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        payload = {}
+    content = payload.get('content') or ''
+    fname = sanitize_filename(payload.get('filename') or '')
+
+    if not content:
+        return jsonify({"error": "No content provided"}), 400
+    if not fname:
+        fname = sanitize_filename(f"artifact_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.txt")
+
+    base = os.path.dirname(__file__)
+    target_dir = os.path.join(base, 'static', 'data', 'artifacts')
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+        target_path = os.path.join(target_dir, fname)
+        with open(target_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        rel_path = os.path.relpath(target_path, base)
+        return jsonify({"ok": True, "path": rel_path.replace("\\", "/")})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/onboarding/<project_id>/data-format', methods=['GET', 'POST'])
+@login_required
+def onboarding_data_format(project_id):
+    # Ensure project exists
+    project = next((p for p in projects_catalog if str(p.get('id')) == str(project_id)), None)
+    if not project:
+        return redirect(url_for('dashboard'))
+
+    # Load data format questionnaire definition
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'data_format_questionnaire.json')
+    try:
+        with open(q_path, 'r', encoding='utf-8') as f:
+            questionnaire = json.load(f)
+    except Exception:
+        questionnaire = {"title": "Data Format Questionnaire", "sections": []}
+
+    error = None
+    if request.method == 'POST':
+        # Collect answers from the posted form (mirrors onboarding parser)
+        answers = {}
+        for section in questionnaire.get('sections', []):
+            for q in section.get('questions', []):
+                qid = q.get('id')
+                qtype = q.get('type')
+                if not qid:
+                    continue
+                form_key = qid.replace('.', '__')
+                if qtype in ['text', 'email', 'textarea', 'radio']:
+                    val = request.form.get(form_key, '').strip()
+                    answers[qid] = val
+                elif qtype == 'multiselect':
+                    vals = request.form.getlist(form_key)
+                    other_enabled = q.get('otherOption')
+                    other_key = form_key + '__other'
+                    other_val = request.form.get(other_key, '').strip() if other_enabled else ''
+                    if other_val:
+                        vals.append(other_val)
+                    answers[qid] = vals
+                else:
+                    answers[qid] = request.form.get(form_key, '').strip()
+
+        # Build structured object grouped by the first segment before '.'
+        structured = {"storage": {}, "schema": {}, "meta": {}, "delivery": {}, "ops": {}}
+        for k, v in answers.items():
+            if '.' in k:
+                grp, rest = k.split('.', 1)
+                if grp in structured:
+                    structured[grp][rest] = v
+                else:
+                    # Put unexpected groups under meta
+                    structured.setdefault('meta', {})[k] = v
+            else:
+                structured.setdefault('meta', {})[k] = v
+
+        # Persist answers to a timestamped JSON file
+        ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        username = session['user']
+        base_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'data_format_answers')
+        os.makedirs(base_dir, exist_ok=True)
+        fname = f"{project_id}_{username}_{ts}.json"
+        fpath = os.path.join(base_dir, fname)
+        payload = {
+            'project_id': project_id,
+            'username': username,
+            'submitted_at': ts,
+            'answers': answers,
+            'data_format': structured
+        }
+        try:
+            with open(fpath, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            error = f"Failed to save data format answers: {e}"
+
+        if not error:
+            return redirect(url_for('onboarding', project_id=project_id))
+
+    # Render specialized data format form with dynamic tabs based on selected storage options
+    return render_template('data_format_form.html', project=project, questionnaire=questionnaire, error=error, form_action=url_for('onboarding_data_format', project_id=project_id))

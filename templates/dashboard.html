@@ -16,10 +16,10 @@
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-6">
+  <div class="col-lg-7">
     <div class="card card-hover h-100">
       <div class="card-body">
-        <h5 class="card-title">My Projects & Participation</h5>
+        <h5 class="card-title">My Projects (Owned)</h5>
         {% if own_projects %}
           <ul class="list-group list-group-flush">
             {% for p in own_projects %}
@@ -36,34 +36,53 @@
             {% endfor %}
           </ul>
         {% else %}
-          <p class="text-muted">You have not joined or created any projects yet.</p>
+          <p class="text-muted">You don't own any projects yet. Start one to see it here.</p>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <div class="col-lg-6">
+  <div class="col-lg-5">
     <div class="card card-hover h-100">
       <div class="card-body">
-        <h5 class="card-title">Explore & Join Projects</h5>
-        {% if explore_projects %}
-          <ul class="list-group list-group-flush">
-            {% for p in explore_projects %}
-              <li class="list-group-item">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>{{ p.title }}</strong>
-                    <div class="text-muted small">Owner: {{ p.owner }} · Tags: {{ p.tags | join(', ') }}</div>
-                  </div>
-                  <form method="post" action="{{ url_for('join_project', project_id=p.id) }}" class="m-0">
-                    <button type="submit" class="btn btn-primary btn-sm">Join</button>
-                  </form>
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <h5 class="card-title mb-0">My Participation Requests</h5>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('explore_projects') }}">Explore Projects</a>
+        </div>
+        {% if user_requests %}
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr><th>Project</th><th>Submitted</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for r in user_requests %}
+                <tr>
+                  <td>{{ r.project_title }}</td>
+                  <td class="small text-muted">{{ r.submitted_at }}</td>
+                  <td>
+                    {% if r.status == 'submitted' %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif r.status == 'accepted' %}
+                      <span class="badge bg-success">Accepted</span>
+                    {% elif r.status == 'rejected' %}
+                      <span class="badge bg-danger">Rejected</span>
+                    {% else %}
+                      <span class="badge bg-secondary">{{ r.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if r.status != 'submitted' %}
+                      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('project_manage', project_id=r.project_id) }}">View Project</a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {% else %}
-          <p class="text-muted">No available projects to explore. Check back later!</p>
+          <p class="text-muted mb-0">You have not requested to join any projects yet. Browse available projects to get started.</p>
         {% endif %}
       </div>
     </div>

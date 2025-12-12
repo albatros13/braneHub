@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Data Format & Representation Answers",
+  "type": "object",
+  "properties": {
+    "storage": {
+      "type": "object",
+      "properties": {
+        "files": { "type": "array", "items": { "type": "string" } },
+        "databases": { "type": "array", "items": { "type": "string" } },
+        "apis_streams": { "type": "array", "items": { "type": "string" } },
+        "object_store": { "type": "array", "items": { "type": "string" } },
+        "source_of_truth": { "type": "string" }
+      }
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "json_schema": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "openapi": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "graphql": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "xml_xsd": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "avro": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "protobuf": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "sql_ddl": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "data_dictionary": { "type": "string", "enum": ["Yes", "No", "Planned", ""] },
+        "other": { "type": "string" }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "field_descriptions": { "type": "string", "enum": ["Yes", "No", "Partial", ""] },
+        "allowed_values_units": { "type": "string", "enum": ["Yes", "No", "Partial", ""] },
+        "time_handling": { "type": "string" },
+        "provenance": { "type": "string" },
+        "quality_rules": { "type": "string" },
+        "versioning_policy": { "type": "string" },
+        "privacy_legal": { "type": "string" }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "methods": { "type": "array", "items": { "type": "string" } },
+        "files_format": { "type": "string" },
+        "api_spec": { "type": "string" },
+        "db_details": { "type": "string" },
+        "object_store_path": { "type": "string" },
+        "stream_details": { "type": "string" }
+      }
+    },
+    "ops": {
+      "type": "object",
+      "properties": {
+        "update_cadence": { "type": "string" },
+        "size_profile": { "type": "string" },
+        "error_retries": { "type": "string" },
+        "contact": { "type": "string" }
+      }
+    }
+  }
+}

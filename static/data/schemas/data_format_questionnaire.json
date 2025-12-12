@@ -1,0 +1,102 @@
+{
+  "title": "Data Format & Representation Questionnaire",
+  "version": "1.1.0",
+  "sections": [
+    {
+      "id": "storage_selector",
+      "title": "Select storage options used",
+      "questions": [
+        { "id": "storage.used", "text": "Which storage options do you use?", "type": "multiselect", "options": ["Files", "Databases", "APIs/Streams", "Object storage"], "otherOption": false }
+      ]
+    },
+    {
+      "id": "files",
+      "title": "Files (batch)",
+      "questions": [
+        { "id": "storage.files", "text": "File formats used (select all)", "type": "multiselect", "options": ["CSV/TSV", "Excel (XLSX)", "JSON", "NDJSON/JSONL", "XML", "YAML", "Parquet", "ORC", "Arrow/Feather", "Delta", "HDF5", "NetCDF", "DICOM", "NIfTI", "FASTA", "VCF", "BAM", "HL7 v2", "FHIR bundles (NDJSON)"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "databases",
+      "title": "Databases",
+      "questions": [
+        { "id": "storage.databases", "text": "Database technologies (select all)", "type": "multiselect", "options": ["PostgreSQL", "MySQL/MariaDB", "SQL Server", "Oracle", "BigQuery", "Snowflake", "Redshift", "Lakehouse", "MongoDB", "Cassandra", "Elasticsearch", "Neo4j"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "apis_streams",
+      "title": "APIs and Streams",
+      "questions": [
+        { "id": "storage.apis_streams", "text": "APIs/streaming tech used (select all)", "type": "multiselect", "options": ["REST/HTTP", "GraphQL", "Kafka", "Pulsar", "Kinesis", "Avro", "Protobuf"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "object_store",
+      "title": "Object storage",
+      "questions": [
+        { "id": "storage.object_store", "text": "Object storage providers (select all)", "type": "multiselect", "options": ["S3", "GCS", "Azure Blob", "MinIO", "Ceph"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "storage_general",
+      "title": "Storage: Source of Truth",
+      "questions": [
+        { "id": "storage.source_of_truth", "text": "Canonical source of truth (brief)", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "schema_contracts",
+      "title": "Schema / structure description",
+      "questions": [
+        { "id": "schema.json_schema", "text": "JSON Schema used?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.openapi", "text": "OpenAPI/Swagger available?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.graphql", "text": "GraphQL schema?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.xml_xsd", "text": "XML Schema (XSD)?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.avro", "text": "Avro schema used?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.protobuf", "text": "Protocol Buffers (.proto)?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.sql_ddl", "text": "SQL DDL / ER diagram available?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.data_dictionary", "text": "Data dictionary / glossary?", "type": "radio", "options": ["Yes", "No", "Planned"] },
+        { "id": "schema.other", "text": "Other schema/contract details (links or notes)", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "governance_metadata",
+      "title": "Metadata & governance",
+      "questions": [
+        { "id": "meta.field_descriptions", "text": "Field descriptions / glossary provided?", "type": "radio", "options": ["Yes", "No", "Partial"] },
+        { "id": "meta.allowed_values_units", "text": "Allowed values / units documented?", "type": "radio", "options": ["Yes", "No", "Partial"] },
+        { "id": "meta.time_handling", "text": "Time handling conventions (ISO 8601, time zones)", "type": "textarea" },
+        { "id": "meta.provenance", "text": "Data provenance (source systems, extract date, cohort criteria)", "type": "textarea" },
+        { "id": "meta.quality_rules", "text": "Quality rules (nullability, ranges, primary keys, uniqueness)", "type": "textarea" },
+        { "id": "meta.versioning_policy", "text": "Versioning policy (schema evolution, deprecation)", "type": "textarea" },
+        { "id": "meta.privacy_legal", "text": "Privacy/legal notes (identifiability, consent scope, IRB/REC)", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "access_delivery",
+      "title": "Access & delivery",
+      "questions": [
+        { "id": "delivery.methods", "text": "Access methods", "type": "multiselect", "options": ["Downloadable files", "API (REST)", "API (GraphQL)", "Database connection", "Object store path", "Streaming topic"], "otherOption": true },
+        { "id": "delivery.files_format", "text": "If files: which format(s)?", "type": "text" },
+        { "id": "delivery.api_spec", "text": "If API: link or attach spec (OpenAPI/GraphQL)", "type": "text" },
+        { "id": "delivery.db_details", "text": "If DB: connection/hosting details (omit secrets)", "type": "textarea" },
+        { "id": "delivery.object_store_path", "text": "If object store: bucket/prefix (e.g., s3://bucket/prefix)", "type": "text" },
+        { "id": "delivery.stream_details", "text": "If streaming: topic name, schema, retention", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "operational",
+      "title": "Operational details",
+      "questions": [
+        { "id": "ops.update_cadence", "text": "Update cadence (e.g., nightly, weekly)", "type": "text" },
+        { "id": "ops.size_profile", "text": "Size per delivery and total history", "type": "text" },
+        { "id": "ops.error_retries", "text": "Expected error rates and retry policy", "type": "textarea" },
+        { "id": "ops.contact", "text": "Contact for incidents/changes", "type": "text" }
+      ]
+    }
+  ],
+  "meta": {
+    "generatedFrom": "static/data/docs/data_format_questionnair_overview.md",
+    "generatedAt": "2025-12-12T12:45:00Z"
+  }
+}

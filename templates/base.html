@@ -9,6 +9,32 @@
     body { padding-top: 4.5rem; }
     .hero { background: #f8f9fa; border-radius: .5rem; padding: 2rem; }
     .card-hover:hover { box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1); transform: translateY(-2px); transition: all .2s ease; }
+
+    /* Assistant panel styles */
+    .assistant-toggle {
+      position: fixed; right: 1rem; bottom: 1rem; z-index: 1040;
+      transition: right .2s ease-in-out;
+    }
+    .assistant-panel {
+      position: fixed; top: 4.5rem; right: 0; bottom: 0; width: 420px;
+      max-width: 80vw; background: #fff; border-left: 1px solid #dee2e6;
+      box-shadow: -0.25rem 0 1rem rgba(0,0,0,0.05);
+      transform: translateX(100%); transition: transform .2s ease-in-out; z-index: 1030;
+      display: flex; flex-direction: column;
+    }
+    .assistant-panel.open { transform: translateX(0%); }
+    .assistant-header { padding: .75rem 1rem; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    .assistant-body { flex: 1; display: flex; overflow: hidden; }
+    .assistant-history { flex: 1; padding: .75rem; overflow-y: auto; }
+    .assistant-compose { border-top: 1px solid #eee; padding: .5rem; display: flex; flex-direction: column; gap: .5rem; }
+    .assistant-compose textarea { flex: 1; resize: none; min-height: 38px; max-height: none; }
+    .assistant-resizer { width: 6px; cursor: ew-resize; background: #f1f3f5; border-left: 1px solid #e9ecef; }
+    .assistant-hsplit { height: 6px; cursor: ns-resize; background: #f1f3f5; border-top: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+    .assistant-msg { margin-bottom: .75rem; }
+    .assistant-msg .role { font-weight: 600; font-size: .85rem; color: #6c757d; }
+    .assistant-msg .bubble { background: #f8f9fa; padding: .5rem .75rem; border-radius: .5rem; }
+    .assistant-msg.assistant .bubble { background: #eef6ff; }
+    .assistant-context { font-size: .85rem; color: #6c757d; border: 1px dashed #cfe2ff; padding: .5rem; border-radius: .5rem; margin-bottom: .5rem; background: #f8fbff; }
   </style>
 </head>
 <body>
@@ -22,6 +48,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if session.get('user') %}
         <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('explore_projects') }}">Explore Projects</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('onboarding_requests') }}">Onboarding Requests</a></li>
         {% endif %}
       </ul>
@@ -42,6 +69,253 @@
   {% block content %}{% endblock %}
 </main>
 
+{% if session.get('user') %}
+<!-- Assistant Panel -->
+<button class="btn btn-primary assistant-toggle" id="assistantLaunch" title="Open Compliance Assistant">AI Assistant</button>
+<div class="assistant-panel" id="assistantPanel" aria-hidden="true">
+  <div class="assistant-header">
+    <div class="d-flex align-items-center gap-2">
+      <strong>Compliance Assistant</strong>
+
+    </div>
+    <div class="d-flex align-items-center gap-2 m-0">
+      <div class="form-check form-switch m-0">
+        <input class="form-check-input" type="checkbox" role="switch" id="assistantUseRAG">
+        <label class="form-check-label small" for="assistantUseRAG">Use document store</label>
+      </div>
+      <select class="form-select form-select-sm" id="assistantLLM" title="Choose LLM" style="width:auto;">
+        <option value="gpt-5">GPT-5</option>
+        <option value="claude-sonnet-4-20250514">Claude Sonnet</option>
+      </select>
+    </div>
+  </div>
+  <div class="assistant-body">
+    <div class="assistant-resizer" id="assistantResizer"></div>
+    <div class="assistant-history" id="assistantHistory" aria-live="polite"></div>
+  </div>
+  <div class="assistant-hsplit" id="assistantHSplit" title="Drag to resize input"></div>
+  <div class="assistant-compose" id="assistantCompose">
+      <textarea id="assistantInput" class="form-control" rows="4" placeholder="Ask about GDPR, HIPAA, ethical approvals, DPIA, cross-border data sharing, etc."></textarea>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-primary" id="assistantSend">Send</button>
+      </div>
+  </div>
+</div>
+
+<!-- Review/Save Modal (shown only when user requests a file and LLM provides it) -->
+<div class="modal fade" id="assistantReviewModal" tabindex="-1" aria-labelledby="assistantReviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assistantReviewModalLabel">Review generated file</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-md-8">
+            <input type="text" class="form-control form-control-sm" id="assistantModalFilename" placeholder="filename.ext (e.g., spec.md, questionnaire.json)">
+          </div>
+          <div class="col-md-4 text-end">
+            <span class="small text-muted">Files are saved under static/data/artifacts</span>
+          </div>
+        </div>
+        <textarea id="assistantModalContent" class="form-control" rows="14" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: .9rem;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="assistantModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+  const panel = document.getElementById('assistantPanel');
+  const launch = document.getElementById('assistantLaunch');
+  const resizer = document.getElementById('assistantResizer');
+  const historyEl = document.getElementById('assistantHistory');
+  const inputEl = document.getElementById('assistantInput');
+  const sendBtn = document.getElementById('assistantSend');
+  const useRagEl = document.getElementById('assistantUseRAG');
+  const llmEl = document.getElementById('assistantLLM');
+  const hsplit = document.getElementById('assistantHSplit');
+  const composeEl = document.getElementById('assistantCompose');
+
+  // Modal elements
+  const reviewModalEl = document.getElementById('assistantReviewModal');
+  const reviewModal = new bootstrap.Modal(reviewModalEl);
+  const modalFilenameEl = document.getElementById('assistantModalFilename');
+  const modalContentEl = document.getElementById('assistantModalContent');
+  const modalSaveBtn = document.getElementById('assistantModalSave');
+
+  let extraContext = '';
+  let history = [];
+  let lastUserAskedForFile = false;
+
+  function render(){
+    historyEl.innerHTML = '';
+    history.forEach(m => {
+      const wrap = document.createElement('div');
+      wrap.className = 'assistant-msg ' + (m.role === 'assistant' ? 'assistant' : '');
+      const role = document.createElement('div');
+      role.className = 'role';
+      role.textContent = m.role === 'assistant' ? 'Assistant' : 'You';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = m.content;
+      wrap.appendChild(role); wrap.appendChild(bubble);
+      if (m.contexts && m.contexts.length){
+        const ctx = document.createElement('div');
+        ctx.className = 'assistant-context';
+        ctx.innerHTML = '<strong>Retrieved context:</strong><br>' + m.contexts.map((c,i)=>`[${i+1}] ${c.text ? c.text.substring(0,300) : ''}`).join('<br>');
+        wrap.appendChild(ctx);
+      }
+      historyEl.appendChild(wrap);
+    });
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
+
+  function positionToggle(){
+    // Move the floating toggle button left so it doesn't overlap the open panel
+    if (panel.classList.contains('open')){
+      const w = panel.getBoundingClientRect().width;
+      launch.style.right = (w + 16) + 'px';
+    } else {
+      launch.style.right = '1rem';
+    }
+  }
+
+  function openPanel(){ panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); setTimeout(positionToggle, 10); }
+  function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); positionToggle(); }
+  // Expose open function globally
+  window.openAssistantPanel = openPanel;
+
+  launch.addEventListener('click', ()=>{
+    if (panel.classList.contains('open')) closePanel(); else openPanel();
+  });
+
+  // Resizing
+  let dragging = false; let startX = 0; let startW = 0;
+  resizer.addEventListener('mousedown', (e)=>{ dragging = true; startX = e.clientX; startW = panel.getBoundingClientRect().width; document.body.style.userSelect='none'; });
+  window.addEventListener('mousemove', (e)=>{
+    if (!dragging) return;
+    const dx = startX - e.clientX; // drag left increases width
+    let newW = Math.min(Math.max(startW + dx, 280), window.innerWidth * 0.8);
+    panel.style.width = newW + 'px';
+    positionToggle();
+  });
+  window.addEventListener('mouseup', ()=>{ dragging = false; document.body.style.userSelect=''; });
+  window.addEventListener('resize', positionToggle);
+
+  // Vertical resizing of compose area via horizontal splitter
+  const MIN_COMPOSE = 80; // px
+  function applyComposeHeight(h){
+    const panelRect = panel.getBoundingClientRect();
+    const maxH = Math.max(120, Math.floor(panelRect.height * 0.75));
+    const clamped = Math.min(Math.max(h, MIN_COMPOSE), maxH);
+    composeEl.style.height = clamped + 'px';
+    // Make textarea fill available space
+    inputEl.style.height = '100%';
+    try { localStorage.setItem('assistantComposeHeight', String(clamped)); } catch(_) {}
+  }
+  // Load last height if available
+  (function(){
+    try{
+      const saved = parseInt(localStorage.getItem('assistantComposeHeight')||'', 10);
+      if (!isNaN(saved)) applyComposeHeight(saved); else applyComposeHeight(140);
+    }catch(_){ applyComposeHeight(140); }
+  })();
+
+  let vDragging = false; let vStartY = 0; let vStartH = 0;
+  hsplit.addEventListener('mousedown', (e)=>{
+    vDragging = true; vStartY = e.clientY; vStartH = composeEl.getBoundingClientRect().height; document.body.style.userSelect='none';
+  });
+  window.addEventListener('mousemove', (e)=>{
+    if (!vDragging) return;
+    const dy = vStartY - e.clientY; // move up -> positive
+    applyComposeHeight(vStartH + dy);
+  });
+  window.addEventListener('mouseup', ()=>{ vDragging = false; document.body.style.userSelect=''; });
+
+  function detectCreateIntent(text){
+    if (!text) return false;
+    const t = text.toLowerCase();
+    const verbs = /(create|generate|write|draft|produce|make|prepare|build|output)/;
+    const nouns = /(file|json|yaml|yml|toml|md|markdown|rego|policy|e?flint|spec|specification|questionnaire|schema|document|doc)/;
+    return verbs.test(t) && nouns.test(t);
+  }
+
+  async function send(){
+    const msg = (inputEl.value || '').trim();
+    if (!msg) return;
+    lastUserAskedForFile = detectCreateIntent(msg);
+    history.push({role:'user', content: msg});
+    render();
+    inputEl.value = '';
+    sendBtn.disabled = true;
+    try{
+      const res = await fetch("{{ url_for('assistant_chat') }}", {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: msg, history: history.filter(m=>m.role!=='assistant'||m.content), use_rag: useRagEl.checked, llm: llmEl.value, extra_context: extraContext })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error){ throw new Error(data.error || 'Request failed'); }
+      history.push({role:'assistant', content: data.reply || '', contexts: data.contexts || []});
+      render();
+      // If user asked to create a file and we have content, open the review modal
+      if (lastUserAskedForFile && (data.reply || '').trim()){
+        modalContentEl.value = data.reply || '';
+        // Try to infer a simple default filename from the prompt
+        const fallback = 'artifact_' + new Date().toISOString().replace(/[-:TZ.]/g,'').slice(0,14) + '.md';
+        modalFilenameEl.value = modalFilenameEl.value || fallback;
+        reviewModal.show();
+      }
+    }catch(err){
+      history.push({role:'assistant', content: 'Error: ' + err.message});
+      render();
+    } finally{
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener('click', send);
+  inputEl.addEventListener('keydown', (e)=>{ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }});
+
+  modalSaveBtn.addEventListener('click', async ()=>{
+    const content = modalContentEl.value || '';
+    if (!content){ alert('Nothing to save.'); return; }
+    const filename = (modalFilenameEl.value || '').trim();
+    try{
+      const res = await fetch("{{ url_for('assistant_save') }}", {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ content, filename })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error){ throw new Error(data.error || 'Save failed'); }
+      alert('Saved to: ' + data.path);
+      reviewModal.hide();
+    }catch(err){
+      alert('Error: ' + err.message);
+    }
+  });
+
+  // Global helper to attach extra context from other pages
+  window.attachAssistantContext = function(text){
+    extraContext = String(text || '');
+    if (extraContext) {
+      history.push({role:'assistant', content:'Attached questionnaire/specification context. It will be included in the next prompt to the selected LLM.'});
+      render();
+    }
+    openPanel();
+  }
+
+  // Seed initial message for guidance
+  history.push({role:'assistant', content:'Hi! I can help you navigate compliance for patient data and biomedical research across regions (GDPR, HIPAA, DPIA, IRB/REC, cross-border transfers). You can enable "Use QDrant RAG" to ground answers in your compliance corpus, choose GPT-5 or Claude Sonnet. If you ask me to create a file/spec, I will open a review window where you can edit and save it to static/data/artifacts.'});
+  render();
+})();
+</script>
+{% endif %}
 </body>
 </html>

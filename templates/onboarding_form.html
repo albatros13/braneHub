@@ -14,7 +14,10 @@
           <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
         <p class="text-muted">Please complete the onboarding questionnaire to request participation. Your answers will be reviewed by the project owner.</p>
-        <form method="post" action="{{ url_for('onboarding', project_id=project.id) }}">
+        <div class="mb-3">
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('onboarding_data_format', project_id=project.id) }}">Describe data format</a>
+        </div>
+        <form method="post" action="{{ form_action or url_for('onboarding', project_id=project.id) }}">
           {% for section in questionnaire.sections %}
             <div class="mb-4">
               <h5 class="mb-3">{{ section.title }}</h5>

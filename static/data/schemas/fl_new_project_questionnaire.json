@@ -1,0 +1,100 @@
+{
+  "title": "New FDP Project – Questionnaire",
+  "version": "1.0.0",
+  "sections": [
+    {
+      "id": "basic",
+      "title": "Basic Information",
+      "questions": [
+        { "id": "title", "name": "title", "text": "Project Title", "type": "text", "required": true },
+        { "id": "email", "name": "email", "text": "Contact Email", "type": "email", "required": true },
+        { "id": "institution", "name": "institution", "text": "Research Institution", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "objective",
+      "title": "Study Objective",
+      "questions": [
+        { "id": "objective", "name": "objective", "text": "Study Objective", "type": "textarea", "rows": 3, "placeholder": "Describe the purpose of the data processing", "required": true }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data Requirements",
+      "questions": [
+        {
+          "id": "data_types",
+          "name": "data_types",
+          "text": "Data Types Required",
+          "type": "multiselect",
+          "options": ["Imaging", "EHR", "Genomics", "Wearables", "Lab Results"],
+          "size": 5,
+          "help": "Select all that apply. Examples include imaging, EHR, genomics."
+        },
+        {
+          "id": "sensitivity",
+          "name": "sensitivity",
+          "text": "Data Sensitivity Level",
+          "type": "radio",
+          "options": ["Low", "Medium", "High"],
+          "default": "Medium",
+          "help": "Determines consent requirements or additional safeguards."
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security & Infrastructure",
+      "questions": [
+        {
+          "id": "security_measures",
+          "name": "security_measures",
+          "text": "Security Measures Planned",
+          "type": "checklist",
+          "options": ["Encryption", "Secure Containers", "Access Logs", "Pseudonymization"]
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "title": "Legal",
+      "questions": [
+        {
+          "id": "legal_basis",
+          "name": "legal_basis",
+          "text": "Legal Basis for Data Processing",
+          "type": "select",
+          "options": ["", "GDPR Consent", "HIPAA TPO", "Public Interest", "Research with Waiver"],
+          "placeholder": "Choose..."
+        }
+      ]
+    },
+    {
+      "id": "collab",
+      "title": "Collaboration",
+      "questions": [
+        {
+          "id": "third_party",
+          "name": "third_party",
+          "text": "Third-party Collaboration",
+          "type": "radio",
+          "options": ["no", "yes"],
+          "labels": {"no": "No", "yes": "Yes"},
+          "default": "no"
+        }
+      ]
+    },
+    {
+      "id": "policies",
+      "title": "Policies",
+      "questions": [
+        { "id": "result_sharing", "name": "result_sharing", "text": "Result Sharing Policy", "type": "textarea", "rows": 3, "placeholder": "Will models or aggregated statistics be shared externally?" },
+        { "id": "responsibilities", "name": "responsibilities", "text": "Participant Responsibilities", "type": "textarea", "rows": 3, "placeholder": "E.g., adherence to access policies, logging, and operational obligations." }
+      ]
+    }
+  ],
+  "meta": {
+    "generatedAt": "2025-12-11T17:45:00Z",
+    "notes": "Fields mirror the previous hard-coded fdp_new.html form and keep the same POST field names for backward compatibility."
+  }
+}

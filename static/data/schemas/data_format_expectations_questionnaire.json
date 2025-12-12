@@ -1,0 +1,66 @@
+{
+  "title": "Expected/Preferred Data Formats (Project Owner)",
+  "version": "1.0.0",
+  "intro": "Specify which data formats you expect or prefer from participants. For each group, mark formats as Acceptable, Not acceptable, or Conditional (can be considered).",
+  "sections": [
+    {
+      "id": "files_expectations",
+      "title": "Files (batch)",
+      "questions": [
+        { "id": "expect.storage.files.acceptable", "text": "Acceptable file formats", "type": "multiselect", "options": ["CSV/TSV", "Excel (XLSX)", "JSON", "NDJSON/JSONL", "XML", "YAML", "Parquet", "ORC", "Arrow/Feather", "Delta", "HDF5", "NetCDF", "DICOM", "NIfTI", "FASTA", "VCF", "BAM", "HL7 v2", "FHIR bundles (NDJSON)"], "otherOption": true },
+        { "id": "expect.storage.files.conditional", "text": "Conditional/considered file formats", "type": "multiselect", "options": ["CSV/TSV", "Excel (XLSX)", "JSON", "NDJSON/JSONL", "XML", "YAML", "Parquet", "ORC", "Arrow/Feather", "Delta", "HDF5", "NetCDF", "DICOM", "NIfTI", "FASTA", "VCF", "BAM", "HL7 v2", "FHIR bundles (NDJSON)"], "otherOption": true },
+        { "id": "expect.storage.files.not_acceptable", "text": "Not acceptable file formats", "type": "multiselect", "options": ["CSV/TSV", "Excel (XLSX)", "JSON", "NDJSON/JSONL", "XML", "YAML", "Parquet", "ORC", "Arrow/Feather", "Delta", "HDF5", "NetCDF", "DICOM", "NIfTI", "FASTA", "VCF", "BAM", "HL7 v2", "FHIR bundles (NDJSON)"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "databases_expectations",
+      "title": "Databases",
+      "questions": [
+        { "id": "expect.storage.databases.acceptable", "text": "Acceptable database technologies", "type": "multiselect", "options": ["PostgreSQL", "MySQL/MariaDB", "SQL Server", "Oracle", "BigQuery", "Snowflake", "Redshift", "Lakehouse", "MongoDB", "Cassandra", "Elasticsearch", "Neo4j"], "otherOption": true },
+        { "id": "expect.storage.databases.conditional", "text": "Conditional database technologies", "type": "multiselect", "options": ["PostgreSQL", "MySQL/MariaDB", "SQL Server", "Oracle", "BigQuery", "Snowflake", "Redshift", "Lakehouse", "MongoDB", "Cassandra", "Elasticsearch", "Neo4j"], "otherOption": true },
+        { "id": "expect.storage.databases.not_acceptable", "text": "Not acceptable database technologies", "type": "multiselect", "options": ["PostgreSQL", "MySQL/MariaDB", "SQL Server", "Oracle", "BigQuery", "Snowflake", "Redshift", "Lakehouse", "MongoDB", "Cassandra", "Elasticsearch", "Neo4j"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "apis_streams_expectations",
+      "title": "APIs and Streams",
+      "questions": [
+        { "id": "expect.storage.apis_streams.acceptable", "text": "Acceptable API/streaming technologies", "type": "multiselect", "options": ["REST/HTTP", "GraphQL", "Kafka", "Pulsar", "Kinesis", "Avro", "Protobuf"], "otherOption": true },
+        { "id": "expect.storage.apis_streams.conditional", "text": "Conditional API/streaming technologies", "type": "multiselect", "options": ["REST/HTTP", "GraphQL", "Kafka", "Pulsar", "Kinesis", "Avro", "Protobuf"], "otherOption": true },
+        { "id": "expect.storage.apis_streams.not_acceptable", "text": "Not acceptable API/streaming technologies", "type": "multiselect", "options": ["REST/HTTP", "GraphQL", "Kafka", "Pulsar", "Kinesis", "Avro", "Protobuf"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "object_store_expectations",
+      "title": "Object storage",
+      "questions": [
+        { "id": "expect.storage.object_store.acceptable", "text": "Acceptable object storage providers", "type": "multiselect", "options": ["S3", "GCS", "Azure Blob", "MinIO", "Ceph"], "otherOption": true },
+        { "id": "expect.storage.object_store.conditional", "text": "Conditional object storage providers", "type": "multiselect", "options": ["S3", "GCS", "Azure Blob", "MinIO", "Ceph"], "otherOption": true },
+        { "id": "expect.storage.object_store.not_acceptable", "text": "Not acceptable object storage providers", "type": "multiselect", "options": ["S3", "GCS", "Azure Blob", "MinIO", "Ceph"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "schema_contracts_expectations",
+      "title": "Schema / structure description preferences",
+      "questions": [
+        { "id": "expect.schema.contracts.acceptable", "text": "Acceptable schema/contract types", "type": "multiselect", "options": ["JSON Schema", "OpenAPI/Swagger", "GraphQL", "XML Schema (XSD)", "Avro", "Protobuf", "SQL DDL / ERD", "Data dictionary"], "otherOption": true },
+        { "id": "expect.schema.contracts.conditional", "text": "Conditional schema/contract types", "type": "multiselect", "options": ["JSON Schema", "OpenAPI/Swagger", "GraphQL", "XML Schema (XSD)", "Avro", "Protobuf", "SQL DDL / ERD", "Data dictionary"], "otherOption": true },
+        { "id": "expect.schema.contracts.not_acceptable", "text": "Not acceptable schema/contract types", "type": "multiselect", "options": ["JSON Schema", "OpenAPI/Swagger", "GraphQL", "XML Schema (XSD)", "Avro", "Protobuf", "SQL DDL / ERD", "Data dictionary"], "otherOption": true },
+        { "id": "expect.schema.other", "text": "Other notes or specific versioning/registry requirements (optional)", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "delivery_expectations",
+      "title": "Access & delivery preferences",
+      "questions": [
+        { "id": "expect.delivery.methods.acceptable", "text": "Acceptable delivery methods", "type": "multiselect", "options": ["Downloadable files", "API (REST)", "API (GraphQL)", "Database connection", "Object store path", "Streaming topic"], "otherOption": true },
+        { "id": "expect.delivery.methods.conditional", "text": "Conditional delivery methods", "type": "multiselect", "options": ["Downloadable files", "API (REST)", "API (GraphQL)", "Database connection", "Object store path", "Streaming topic"], "otherOption": true },
+        { "id": "expect.delivery.methods.not_acceptable", "text": "Not acceptable delivery methods", "type": "multiselect", "options": ["Downloadable files", "API (REST)", "API (GraphQL)", "Database connection", "Object store path", "Streaming topic"], "otherOption": true }
+      ]
+    }
+  ],
+  "meta": {
+    "generatedFrom": "static/data/schemas/data_format_questionnaire.json",
+    "generatedAt": "2025-12-12T12:52:00Z"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "title": "FL Onboarding – Minimal Questionnaire (Policy-Relevant)",
+  "version": "2.1.0",
+  "sections": [
+    {
+      "id": "organization",
+      "title": "Organization",
+      "questions": [
+        { "id": "organization.name", "text": "Organization name", "type": "text", "required": true },
+        { "id": "organization.primaryContact.name", "text": "Primary contact name", "type": "text", "required": true },
+        { "id": "organization.primaryContact.role", "text": "Primary contact role/title", "type": "text" },
+        { "id": "organization.primaryContact.email", "text": "Primary contact email", "type": "email", "required": true },
+        { "id": "organization.primaryContact.phone", "text": "Primary contact phone", "type": "text" },
+        { "id": "organization.dpoContact.name", "text": "Data Protection Officer (DPO) name (if any)", "type": "text" },
+        { "id": "organization.dpoContact.role", "text": "DPO role/title", "type": "text" },
+        { "id": "organization.dpoContact.email", "text": "DPO email", "type": "email" },
+        { "id": "organization.jurisdictions", "text": "Jurisdictions applicable to your organization", "type": "multiselect", "options": ["EU", "UK", "US", "Other"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "data_nature",
+      "title": "Nature of Data",
+      "questions": [
+        { "id": "dataNature.involvesHumanResearch", "text": "Does the dataset involve human subject research?", "type": "radio", "options": ["Yes", "No"] },
+        { "id": "dataNature.retrospectiveConsent", "text": "If retrospective data is used, is consent permitting reuse clearly established?", "type": "radio", "options": ["Yes", "No", "Unsure"] }
+      ]
+    },
+    {
+      "id": "ethical_legal",
+      "title": "Ethics & Legal",
+      "questions": [
+        { "id": "ethicalLegal.irbApproval", "text": "Do you have IRB/Ethics approval for this federated learning participation?", "type": "radio", "options": ["Yes", "No", "NotApplicable"] }
+      ]
+    },
+    {
+      "id": "identifiability",
+      "title": "Identifiability",
+      "questions": [
+        { "id": "identifiability.directIdentifiers", "text": "Does the dataset contain direct identifiers (e.g., name, ID, contact)?", "type": "radio", "options": ["Yes", "No"] },
+        { "id": "identifiability.quasiIdentifiers", "text": "Does the dataset contain quasi-identifiers (e.g., DOB, ZIP, rare diagnoses)?", "type": "radio", "options": ["Yes", "No"] },
+        { "id": "identifiability.processingLevel", "text": "Select the processing level of the data provided for FL", "type": "radio", "options": ["Anonymized", "Pseudonymized", "Identifiable", "Other"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "security_infra",
+      "title": "Security & Infrastructure",
+      "questions": [
+        { "id": "securityInfrastructure.auditLoggingRequired", "text": "Do you require audit logging of exchanges?", "type": "radio", "options": ["Yes", "No", "Conditional"] },
+        { "id": "securityInfrastructure.networkConnectionPolicy", "text": "Is outbound network connectivity from the FL node permitted?", "type": "radio", "options": ["Yes", "No", "ProxyOnly", "VPNOnly", "Restricted"] },
+        { "id": "securityInfrastructure.securityCertifications", "text": "Security certifications (select all that apply)", "type": "multiselect", "options": ["ISO27001", "HIPAA", "NEN7510", "SOC2", "None", "Other"], "otherOption": true }
+      ]
+    },
+    {
+      "id": "governance",
+      "title": "Data Governance",
+      "questions": [
+        { "id": "dataGovernance.agreementsExist", "text": "Do data sharing agreements or internal policies exist that constrain FL participation?", "type": "radio", "options": ["Yes", "No"] },
+        { "id": "dataGovernance.modelUpdatesAllowed", "text": "Can model updates derived from your data leave your environment?", "type": "radio", "options": ["Yes", "AfterDifferentialPrivacy", "AfterEncryption", "No"] },
+        { "id": "dataGovernance.requiresPerRoundApproval", "text": "Do you require explicit approval before each training round?", "type": "radio", "options": ["Yes", "No"] }
+      ]
+    },
+    {
+      "id": "retention_revocation",
+      "title": "Retention & Revocation",
+      "questions": [
+        { "id": "retentionRevocation.requiresUnlearning", "text": "If consent is revoked, is machine unlearning required?", "type": "radio", "options": ["Yes", "No", "CaseByCase"] }
+      ]
+    }
+  ],
+  "meta": {
+    "generatedFrom": "fl_onboarding.rego",
+    "generatedAt": "2025-12-11T15:33:00Z"
+  }
+}

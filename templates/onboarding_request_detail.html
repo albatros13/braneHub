@@ -86,7 +86,10 @@
   <div class="col-12">
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title">Questionnaire Answers</h5>
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Questionnaire Answers</h5>
+          <button type="button" id="includeInAssistant" class="btn btn-sm btn-outline-primary" title="Include questionnaire in AI context">Include in AI context</button>
+        </div>
         {% if answers._error %}
           <div class="alert alert-warning" role="alert">{{ answers._error }}</div>
         {% endif %}
@@ -121,4 +124,26 @@
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  const btn = document.getElementById('includeInAssistant');
+  if (!btn) return;
+  btn.addEventListener('click', ()=>{
+    try{
+      const payload = { project_id: {{ project.id|tojson }}, request_id: {{ req._id|tojson }}, answers: {{ answers|tojson }} };
+      const text = 'Onboarding questionnaire context for project ' + {{ project.id|tojson }} + ' / request #' + {{ req._id|tojson }} + ':\n' + JSON.stringify(payload, null, 2);
+      if (window.attachAssistantContext) {
+        window.attachAssistantContext(text);
+      } else {
+        alert('Assistant is not loaded.');
+      }
+      if (window.openAssistantPanel) window.openAssistantPanel();
+    }catch(err){
+      console.error(err);
+      alert('Failed to attach context: ' + err.message);
+    }
+  });
+})();
+</script>
 {% endblock %}

@@ -13,92 +13,91 @@
         {% if error %}
           <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
+        <div class="mb-3">
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('fdp_expected_data_format') }}">Describe expected data format</a>
+        </div>
         <form method="post" action="{{ url_for('fdp_new') }}">
           <div class="row g-3">
-            <div class="col-md-8">
-              <label for="title" class="form-label">Project Title</label>
-              <input type="text" class="form-control" id="title" name="title" required>
-            </div>
-            <div class="col-md-4">
-              <label for="email" class="form-label">Contact Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="col-md-8">
-              <label for="institution" class="form-label">Research Institution</label>
-              <input type="text" class="form-control" id="institution" name="institution" required>
-            </div>
-            <div class="col-12">
-              <label for="objective" class="form-label">Study Objective</label>
-              <textarea class="form-control" id="objective" name="objective" rows="3" placeholder="Describe the purpose of the data processing" required></textarea>
-            </div>
-
-            <div class="col-md-6">
-              <label for="data_types" class="form-label">Data Types Required</label>
-              <select id="data_types" name="data_types" class="form-select" multiple size="5" aria-describedby="dataTypesHelp">
-                {% for opt in data_types_options %}
-                  <option value="{{ opt }}">{{ opt }}</option>
-                {% endfor %}
-              </select>
-              <div id="dataTypesHelp" class="form-text">Select all that apply. Examples include imaging, EHR, genomics.</div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label d-block">Data Sensitivity Level</label>
-              <div class="btn-group" role="group" aria-label="Sensitivity">
-                <input type="radio" class="btn-check" name="sensitivity" id="sensLow" value="Low" autocomplete="off">
-                <label class="btn btn-outline-secondary" for="sensLow">Low</label>
-                <input type="radio" class="btn-check" name="sensitivity" id="sensMed" value="Medium" autocomplete="off" checked>
-                <label class="btn btn-outline-secondary" for="sensMed">Medium</label>
-                <input type="radio" class="btn-check" name="sensitivity" id="sensHigh" value="High" autocomplete="off">
-                <label class="btn btn-outline-secondary" for="sensHigh">High</label>
+            {% for section in questionnaire.sections %}
+              <div class="col-12">
+                <h5 class="mb-2">{{ section.title }}</h5>
               </div>
-              <div class="form-text">Determines consent requirements or additional safeguards.</div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Security Measures Planned</label>
-              <div class="row row-cols-1 row-cols-sm-2 g-2">
-                {% for opt in security_measures_options %}
-                <div class="col">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="{{ opt }}" id="sec_{{ loop.index }}" name="security_measures">
-                    <label class="form-check-label" for="sec_{{ loop.index }}">{{ opt }}</label>
+              {% for q in section.questions %}
+                {% set fid = (q.name or q.id) %}
+                {% set qid = q.id %}
+                {% set required = q.required %}
+                {% set labels = q.labels or {} %}
+                {% if q.type in ['text','email'] %}
+                  <div class="col-md-{{ q.col or 6 }}">
+                    <label class="form-label" for="{{ qid }}">{{ q.text }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+                    <input type="{{ q.type }}" class="form-control" id="{{ qid }}" name="{{ fid }}" {% if required %}required{% endif %}>
+                    {% if q.help %}<div class="form-text">{{ q.help }}</div>{% endif %}
                   </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <label for="legal_basis" class="form-label">Legal Basis for Data Processing</label>
-              <select id="legal_basis" name="legal_basis" class="form-select">
-                <option value="" selected>Choose...</option>
-                {% for opt in legal_basis_options %}
-                  <option value="{{ opt }}">{{ opt }}</option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label d-block">Third-party Collaboration</label>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="third_party" id="tpNo" value="no" checked>
-                <label class="form-check-label" for="tpNo">No</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="third_party" id="tpYes" value="yes">
-                <label class="form-check-label" for="tpYes">Yes</label>
-              </div>
-            </div>
-
-            <div class="col-12">
-              <label for="result_sharing" class="form-label">Result Sharing Policy</label>
-              <textarea class="form-control" id="result_sharing" name="result_sharing" rows="3" placeholder="Will models or aggregated statistics be shared externally?"></textarea>
-            </div>
-            <div class="col-12">
-              <label for="responsibilities" class="form-label">Participant Responsibilities</label>
-              <textarea class="form-control" id="responsibilities" name="responsibilities" rows="3" placeholder="E.g., adherence to access policies, logging, and operational obligations."></textarea>
-            </div>
+                {% elif q.type == 'textarea' %}
+                  <div class="col-12">
+                    <label class="form-label" for="{{ qid }}">{{ q.text }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+                    <textarea class="form-control" id="{{ qid }}" name="{{ fid }}" rows="{{ q.rows or 3 }}" placeholder="{{ q.placeholder or '' }}" {% if required %}required{% endif %}></textarea>
+                    {% if q.help %}<div class="form-text">{{ q.help }}</div>{% endif %}
+                  </div>
+                {% elif q.type == 'multiselect' %}
+                  <div class="col-md-6">
+                    <label class="form-label" for="{{ qid }}">{{ q.text }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+                    <select id="{{ qid }}" name="{{ fid }}" class="form-select" multiple size="{{ q.size or (q.options|length) or 5 }}" aria-describedby="{{ qid }}_help">
+                      {% for opt in q.options %}
+                        <option value="{{ opt }}">{{ (labels.get(opt) if labels else opt) }}</option>
+                      {% endfor %}
+                    </select>
+                    {% if q.help %}<div id="{{ qid }}_help" class="form-text">{{ q.help }}</div>{% endif %}
+                  </div>
+                {% elif q.type == 'radio' %}
+                  <div class="col-md-6">
+                    <label class="form-label d-block">{{ q.text }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                      {% for opt in q.options %}
+                        {% set oid = qid + '_' + loop.index|string %}
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="{{ fid }}" id="{{ oid }}" value="{{ opt }}" {% if q.default and q.default == opt %}checked{% endif %}>
+                          <label class="form-check-label" for="{{ oid }}">{{ (labels.get(opt) if labels else opt) }}</label>
+                        </div>
+                      {% endfor %}
+                    </div>
+                    {% if q.help %}<div class="form-text">{{ q.help }}</div>{% endif %}
+                  </div>
+                {% elif q.type == 'select' %}
+                  <div class="col-md-6">
+                    <label class="form-label" for="{{ qid }}">{{ q.text }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+                    <select id="{{ qid }}" name="{{ fid }}" class="form-select">
+                      {% for opt in q.options %}
+                        {% set text = (labels.get(opt) if labels else (q.placeholder if opt == '' and q.placeholder else opt)) %}
+                        <option value="{{ opt }}" {% if (q.default is defined and q.default == opt) or (opt == '' and (q.default is not defined)) %}{% if opt == '' %}selected{% endif %}{% endif %}>{{ text }}</option>
+                      {% endfor %}
+                    </select>
+                    {% if q.help %}<div class="form-text">{{ q.help }}</div>{% endif %}
+                  </div>
+                {% elif q.type == 'checklist' %}
+                  <div class="col-md-6">
+                    <label class="form-label">{{ q.text }}</label>
+                    <div class="row row-cols-1 row-cols-sm-2 g-2">
+                      {% for opt in q.options %}
+                        {% set oid = qid + '_chk_' + loop.index|string %}
+                        <div class="col">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ opt }}" id="{{ oid }}" name="{{ fid }}">
+                            <label class="form-check-label" for="{{ oid }}">{{ (labels.get(opt) if labels else opt) }}</label>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                    {% if q.help %}<div class="form-text">{{ q.help }}</div>{% endif %}
+                  </div>
+                {% else %}
+                  <div class="col-md-6">
+                    <label class="form-label" for="{{ qid }}">{{ q.text }}</label>
+                    <input type="text" class="form-control" id="{{ qid }}" name="{{ fid }}">
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
