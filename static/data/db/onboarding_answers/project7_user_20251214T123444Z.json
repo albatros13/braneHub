@@ -1,0 +1,71 @@
+{
+  "project_id": "project7",
+  "username": "user",
+  "submitted_at": "20251214T123444Z",
+  "answers": {
+    "organization.name": "NK Research",
+    "organization.primaryContact.name": "NK Research",
+    "organization.primaryContact.role": "NK Research",
+    "organization.primaryContact.email": "natallia.kokash@gmail.com",
+    "organization.primaryContact.phone": "0620039320",
+    "organization.dpoContact.name": "",
+    "organization.dpoContact.role": "",
+    "organization.dpoContact.email": "",
+    "organization.jurisdictions": [],
+    "dataNature.involvesHumanResearch": "",
+    "dataNature.retrospectiveConsent": "",
+    "ethicalLegal.irbApproval": "",
+    "identifiability.directIdentifiers": "",
+    "identifiability.quasiIdentifiers": "",
+    "identifiability.processingLevel": "",
+    "securityInfrastructure.auditLoggingRequired": "",
+    "securityInfrastructure.networkConnectionPolicy": "",
+    "securityInfrastructure.securityCertifications": [],
+    "dataGovernance.agreementsExist": "",
+    "dataGovernance.modelUpdatesAllowed": "",
+    "dataGovernance.requiresPerRoundApproval": "",
+    "retentionRevocation.requiresUnlearning": ""
+  },
+  "input": {
+    "organization": {
+      "name": "NK Research",
+      "primaryContact": {
+        "name": "NK Research",
+        "role": "NK Research",
+        "email": "natallia.kokash@gmail.com",
+        "phone": "0620039320"
+      },
+      "dpoContact": {
+        "name": null,
+        "role": null,
+        "email": null
+      },
+      "jurisdictions": []
+    },
+    "dataNature": {
+      "involvesHumanResearch": null,
+      "retrospectiveConsent": null
+    },
+    "ethicalLegal": {
+      "irbApproval": null
+    },
+    "identifiability": {
+      "directIdentifiers": null,
+      "quasiIdentifiers": null,
+      "processingLevel": null
+    },
+    "securityInfrastructure": {
+      "auditLoggingRequired": null,
+      "networkConnectionPolicy": null,
+      "securityCertifications": []
+    },
+    "dataGovernance": {
+      "agreementsExist": null,
+      "modelUpdatesAllowed": null,
+      "requiresPerRoundApproval": null
+    },
+    "retentionRevocation": {
+      "requiresUnlearning": null
+    }
+  }
+}

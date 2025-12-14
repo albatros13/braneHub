@@ -1,0 +1,79 @@
+{
+  "project_id": "project2",
+  "username": "main",
+  "submitted_at": "20251211T154553Z",
+  "answers": {
+    "organization.name": "NK Research",
+    "organization.primaryContact.name": "NK Research",
+    "organization.primaryContact.role": "NK Research",
+    "organization.primaryContact.email": "natallia.kokash@gmail.com",
+    "organization.primaryContact.phone": "0620000000000",
+    "organization.dpoContact.name": "",
+    "organization.dpoContact.role": "",
+    "organization.dpoContact.email": "",
+    "organization.jurisdictions": [
+      "EU"
+    ],
+    "dataNature.involvesHumanResearch": "Yes",
+    "dataNature.retrospectiveConsent": "",
+    "ethicalLegal.irbApproval": "Yes",
+    "identifiability.directIdentifiers": "No",
+    "identifiability.quasiIdentifiers": "Yes",
+    "identifiability.processingLevel": "Identifiable",
+    "securityInfrastructure.auditLoggingRequired": "No",
+    "securityInfrastructure.networkConnectionPolicy": "No",
+    "securityInfrastructure.securityCertifications": [
+      "SOC2"
+    ],
+    "dataGovernance.agreementsExist": "",
+    "dataGovernance.modelUpdatesAllowed": "AfterDifferentialPrivacy",
+    "dataGovernance.requiresPerRoundApproval": "Yes",
+    "retentionRevocation.requiresUnlearning": "No"
+  },
+  "input": {
+    "organization": {
+      "name": "NK Research",
+      "primaryContact": {
+        "name": "NK Research",
+        "role": "NK Research",
+        "email": "natallia.kokash@gmail.com",
+        "phone": "0620000000000"
+      },
+      "dpoContact": {
+        "name": null,
+        "role": null,
+        "email": null
+      },
+      "jurisdictions": [
+        "EU"
+      ]
+    },
+    "dataNature": {
+      "involvesHumanResearch": true,
+      "retrospectiveConsent": null
+    },
+    "ethicalLegal": {
+      "irbApproval": "Yes"
+    },
+    "identifiability": {
+      "directIdentifiers": false,
+      "quasiIdentifiers": true,
+      "processingLevel": "Identifiable"
+    },
+    "securityInfrastructure": {
+      "auditLoggingRequired": "No",
+      "networkConnectionPolicy": "No",
+      "securityCertifications": [
+        "SOC2"
+      ]
+    },
+    "dataGovernance": {
+      "agreementsExist": null,
+      "modelUpdatesAllowed": "AfterDifferentialPrivacy",
+      "requiresPerRoundApproval": true
+    },
+    "retentionRevocation": {
+      "requiresUnlearning": "No"
+    }
+  }
+}

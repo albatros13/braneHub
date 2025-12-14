@@ -4,6 +4,8 @@ from datetime import datetime
 import json
 import os
 import re
+from src.OPAClient import OPAClient
+from src.services.data_format import has_data_answers_for_request, build_opa_input_for_request
 
 app = Flask(__name__)
 # NOTE: Replace this with a secure random value in production
@@ -263,7 +265,7 @@ def fdp_new():
     error = None
 
     # Load new-project questionnaire config (fields for the form)
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'fl_new_project_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'new_project_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             new_proj_q = json.load(f)
@@ -477,7 +479,7 @@ def onboarding(project_id):
         return redirect(url_for('dashboard'))
 
     # Load questionnaire definition
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'fl_onboarding_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'onboarding_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             questionnaire = json.load(f)
@@ -511,7 +513,7 @@ def onboarding(project_id):
                     # Fallback to string
                     answers[qid] = request.form.get(form_key, '').strip()
 
-        # Build nested input object per fl_onboarding_input_schema_full.json
+        # Build nested input object per onboarding_input_schema.json
         def yn_to_bool(v):
             return True if str(v).strip().lower() in ("yes", "true", "1") else False if str(v).strip().lower() in ("no", "false", "0") else None
 
@@ -581,6 +583,21 @@ def onboarding(project_id):
         if not error:
             # Append a record to onboarding_requests.json
             req_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'onboarding_requests.json')
+
+            # Try to locate a data format answers file for this project/user (latest by timestamp)
+            data_answers_rel = None
+            try:
+                df_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'data_format_answers')
+                if os.path.isdir(df_dir):
+                    prefix = f"{project_id}_{username}_"
+                    df_files = [f for f in os.listdir(df_dir) if f.startswith(prefix) and f.endswith('.json')]
+                    if df_files:
+                        df_files.sort(reverse=True)
+                        df_abs = os.path.join(df_dir, df_files[0])
+                        data_answers_rel = os.path.relpath(df_abs, os.path.dirname(__file__)).replace('\\', '/')
+            except Exception:
+                data_answers_rel = None
+
             record = {
                 'project_id': project_id,
                 'username': username,
@@ -588,6 +605,8 @@ def onboarding(project_id):
                 'answers_file': os.path.relpath(ans_path, os.path.dirname(__file__)).replace('\\', '/') ,
                 'status': 'submitted'
             }
+            if data_answers_rel:
+                record['data_answers_file'] = data_answers_rel
             try:
                 # Ensure parent directory exists
                 os.makedirs(os.path.dirname(req_path), exist_ok=True)
@@ -741,7 +760,120 @@ def onboarding_request_detail(req_id):
         except Exception as e:
             answers = {'_error': f'Failed to load answers: {e}'}
 
-    return render_template('onboarding_request_detail.html', req={**rec, '_id': req_id}, project=proj, answers=answers)
+    # Determine if applicant provided data-format answers (moved to service)
+    base_dir = os.path.dirname(__file__)
+    has_data_answers = has_data_answers_for_request(rec, base_dir)
+
+    return render_template('onboarding_request_detail.html', req={**rec, '_id': req_id}, project=proj, answers=answers, has_data_answers=has_data_answers)
+
+
+@app.route('/requests/<int:req_id>/data-format-opa-input')
+@login_required
+def onboarding_request_data_format_opa_input(req_id):
+    """Generate OPA input JSON for data_format_acceptance.rego for this onboarding request.
+    Returns an object: { "expected": {...}, "provided": {...} }
+    """
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    base_dir = os.path.dirname(__file__)
+    opa_input = build_opa_input_for_request(rec, proj, base_dir)
+    return jsonify(opa_input)
+
+
+@app.route('/requests/<int:req_id>/data-format-answers')
+@login_required
+def onboarding_request_data_format_answers(req_id):
+    """Render a human-readable preview of the applicant's data-format answers for this request."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    # Discover the applicant's data-format answers file (prefer explicit link, fallback to latest by pattern)
+    df_abs_path = None
+    df_rel_path = None
+    try:
+        linked_rel = rec.get('data_answers_file')
+        if linked_rel:
+            df_abs_path = os.path.join(os.path.dirname(__file__), linked_rel.replace('/', os.sep))
+            df_rel_path = linked_rel
+        if not df_abs_path or not os.path.isfile(df_abs_path):
+            df_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'db', 'data_format_answers')
+            if os.path.isdir(df_dir):
+                prefix = f"{rec.get('project_id')}_{rec.get('username')}_"
+                files = [f for f in os.listdir(df_dir) if f.startswith(prefix) and f.endswith('.json')]
+                if files:
+                    files.sort(reverse=True)
+                    df_abs_path = os.path.join(df_dir, files[0])
+                    df_rel_path = os.path.relpath(df_abs_path, os.path.dirname(__file__)).replace('\\','/')
+    except Exception:
+        df_abs_path = None
+
+    structured = {}
+    load_error = None
+    try:
+        if df_abs_path and os.path.isfile(df_abs_path):
+            with open(df_abs_path, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+                structured = payload.get('data_format') or {}
+        else:
+            load_error = 'No data-format answers file found for this request.'
+    except Exception as e:
+        load_error = f"Failed to load data-format answers: {e}"
+
+    # Derive a downloadable href if within static/
+    download_href = None
+    if df_rel_path and df_rel_path.startswith('static/'):
+        download_href = url_for('static', filename=df_rel_path[7:])
+
+    return render_template(
+        'data_format_answers_preview.html',
+        req={**rec, '_id': req_id},
+        project=proj,
+        structured=structured,
+        load_error=load_error,
+        source_rel=df_rel_path,
+        download_href=download_href
+    )
+
+
+@app.route('/requests/<int:req_id>/data-format-eval')
+@login_required
+def onboarding_request_data_format_eval(req_id):
+    """Upload the data_format_acceptance.rego to OPA and evaluate the decision for this request. Returns JSON."""
+    # Reuse the input generator to assemble expected/provided
+    with app.test_request_context():
+        input_resp = onboarding_request_data_format_opa_input(req_id)
+        input_obj = input_resp.get_json()
+
+    # Load policy text
+    policy_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'data_format_acceptance.rego')
+    try:
+        with open(policy_path, 'r', encoding='utf-8') as f:
+            rego_text = f.read()
+    except Exception as e:
+        return jsonify({"error": f"Failed to load policy: {e}"}), 500
+
+    # Evaluate via OPAClient
+    try:
+        opa = OPAClient(os.getenv('OPA_URL', 'http://localhost:8181'))
+        decision = opa.evaluate_data_format(rego_text, {"expected": input_obj.get('expected', {}), "provided": input_obj.get('provided', {})})
+        return jsonify({"decision": decision})
+    except Exception as e:
+        return jsonify({"error": f"OPA evaluation failed: {e}"}), 502
 
 
 @app.route('/requests/<int:req_id>/decide', methods=['POST'])

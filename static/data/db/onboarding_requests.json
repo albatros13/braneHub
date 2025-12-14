@@ -39,5 +39,19 @@
     "submitted_at": "20251211T154553Z",
     "answers_file": "static/data/db/onboarding_answers/project2_main_20251211T154553Z.json",
     "status": "submitted"
+  },
+  {
+    "project_id": "project7",
+    "username": "user",
+    "submitted_at": "20251214T123334Z",
+    "answers_file": "static/data/db/onboarding_answers/project7_user_20251214T123334Z.json",
+    "status": "submitted"
+  },
+  {
+    "project_id": "project7",
+    "username": "user",
+    "submitted_at": "20251214T123444Z",
+    "answers_file": "static/data/db/onboarding_answers/project7_user_20251214T123444Z.json",
+    "status": "submitted"
   }
 ]

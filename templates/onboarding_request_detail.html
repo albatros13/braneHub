@@ -1,149 +1,301 @@
 {% extends 'base.html' %}
 {% block title %}Request Details · BraneHub{% endblock %}
 {% block content %}
-<div class="row mb-3">
-  <div class="col-12 d-flex justify-content-between align-items-center">
-    <div>
-      <a href="{{ url_for('onboarding_requests') }}" class="text-decoration-none">← Back to Requests</a>
-      <h1 class="h4 mt-2 mb-0">Onboarding Request</h1>
-      <div class="text-muted small">Project: {{ project.title }} ({{ project.id }})</div>
-    </div>
-  </div>
-</div>
-
-<div class="row g-4">
-  <div class="col-lg-7">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">Applicant & Submission</h5>
-        <dl class="row mb-0">
-          <dt class="col-sm-4">Applicant</dt>
-          <dd class="col-sm-8">{{ req.username }}</dd>
-          <dt class="col-sm-4">Submitted at</dt>
-          <dd class="col-sm-8">{{ req.submitted_at }}</dd>
-          <dt class="col-sm-4">Status</dt>
-          <dd class="col-sm-8">
-            {% if req.status == 'submitted' %}
-              <span class="badge bg-warning text-dark">Pending</span>
-            {% elif req.status == 'accepted' %}
-              <span class="badge bg-success">Accepted</span>
-            {% elif req.status == 'rejected' %}
-              <span class="badge bg-danger">Rejected</span>
-            {% else %}
-              <span class="badge bg-secondary">{{ req.status }}</span>
-            {% endif %}
-          </dd>
-          {% if req.decided_by %}
-          <dt class="col-sm-4">Decided by</dt>
-          <dd class="col-sm-8">{{ req.decided_by }} at {{ req.decided_at }}</dd>
-          {% endif %}
-          {% if req.rejection_reason %}
-          <dt class="col-sm-4">Rejection Reason</dt>
-          <dd class="col-sm-8">{{ req.rejection_reason }}</dd>
-          {% endif %}
-        </dl>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-5">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">Decision</h5>
-        {% if req.status == 'submitted' %}
-          <form method="post" action="{{ url_for('onboarding_request_decide', req_id=req._id) }}">
-            <div class="mb-3">
-              <label class="form-label">Action</label>
-              <div class="d-flex gap-2">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="decision" id="decAccept" value="accept" checked>
-                  <label class="form-check-label" for="decAccept">Accept</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="decision" id="decReject" value="reject">
-                  <label class="form-check-label" for="decReject">Reject</label>
-                </div>
-              </div>
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{{ url_for('onboarding_requests') }}" class="text-decoration-none">← Back to Requests</a>
+                <h1 class="h4 mt-2 mb-0">Onboarding Request</h1>
+                <div class="text-muted small">Project: {{ project.title }} ({{ project.id }})</div>
             </div>
-            <div class="mb-3">
-              <label for="reason" class="form-label">Reason (if rejecting)</label>
-              <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Optional, but recommended when rejecting"></textarea>
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-              <a href="{{ url_for('onboarding_requests') }}" class="btn btn-outline-secondary">Cancel</a>
-              <button type="submit" class="btn btn-primary">Submit Decision</button>
-            </div>
-          </form>
-        {% else %}
-          <p class="text-muted mb-0">This request has already been decided.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="row g-4 mt-1">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <h5 class="card-title mb-0">Questionnaire Answers</h5>
-          <button type="button" id="includeInAssistant" class="btn btn-sm btn-outline-primary" title="Include questionnaire in AI context">Include in AI context</button>
         </div>
-        {% if answers._error %}
-          <div class="alert alert-warning" role="alert">{{ answers._error }}</div>
-        {% endif %}
-        {% if answers %}
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead>
-                <tr><th>Question ID</th><th>Answer</th></tr>
-              </thead>
-              <tbody>
-              {% for key, val in answers.items() %}
-                {% if key != '_error' %}
-                <tr>
-                  <td class="small text-muted">{{ key }}</td>
-                  <td>
-                    {% if val is iterable and val is not string %}
-                      {{ val | join(', ') }}
-                    {% else %}
-                      {{ val }}
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endif %}
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <p class="text-muted mb-0">No answers found.</p>
-        {% endif %}
-      </div>
     </div>
-  </div>
-</div>
 
-<script>
-(function(){
-  const btn = document.getElementById('includeInAssistant');
-  if (!btn) return;
-  btn.addEventListener('click', ()=>{
-    try{
-      const payload = { project_id: {{ project.id|tojson }}, request_id: {{ req._id|tojson }}, answers: {{ answers|tojson }} };
-      const text = 'Onboarding questionnaire context for project ' + {{ project.id|tojson }} + ' / request #' + {{ req._id|tojson }} + ':\n' + JSON.stringify(payload, null, 2);
-      if (window.attachAssistantContext) {
-        window.attachAssistantContext(text);
-      } else {
-        alert('Assistant is not loaded.');
-      }
-      if (window.openAssistantPanel) window.openAssistantPanel();
-    }catch(err){
-      console.error(err);
-      alert('Failed to attach context: ' + err.message);
-    }
-  });
-})();
-</script>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Applicant & Submission</h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Applicant</dt>
+                        <dd class="col-sm-8">{{ req.username }}</dd>
+                        <dt class="col-sm-4">Submitted at</dt>
+                        <dd class="col-sm-8">{{ req.submitted_at }}</dd>
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            {% if req.status == 'submitted' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif req.status == 'accepted' %}
+                                <span class="badge bg-success">Accepted</span>
+                            {% elif req.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ req.status }}</span>
+                            {% endif %}
+                        </dd>
+                        {% if req.decided_by %}
+                            <dt class="col-sm-4">Decided by</dt>
+                            <dd class="col-sm-8">{{ req.decided_by }} at {{ req.decided_at }}</dd>
+                        {% endif %}
+                        {% if req.rejection_reason %}
+                            <dt class="col-sm-4">Rejection Reason</dt>
+                            <dd class="col-sm-8">{{ req.rejection_reason }}</dd>
+                        {% endif %}
+                        {% if req.data_answers_file %}
+                            <dt class="col-sm-4">Data answers file</dt>
+                            <dd class="col-sm-8">
+                                {% set rel = req.data_answers_file %}
+                                {% if rel and rel.startswith('static/') %}
+                                    <a href="{{ url_for('static', filename=rel[7:]) }}" target="_blank">{{ rel }}</a>
+                                {% else %}
+                                    <code>{{ rel }}</code>
+                                {% endif %}
+                            </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Decision</h5>
+                    {% if req.status == 'submitted' %}
+                        <form method="post" action="{{ url_for('onboarding_request_decide', req_id=req._id) }}">
+                            <div class="mb-3">
+                                <label class="form-label">Action</label>
+                                <div class="d-flex gap-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="decision" id="decAccept"
+                                               value="accept" checked>
+                                        <label class="form-check-label" for="decAccept">Accept</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="decision" id="decReject"
+                                               value="reject">
+                                        <label class="form-check-label" for="decReject">Reject</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">Reason (if rejecting)</label>
+                                <textarea id="reason" name="reason" class="form-control" rows="3"
+                                          placeholder="Optional, but recommended when rejecting"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('onboarding_requests') }}"
+                                   class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Submit Decision</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="text-muted mb-0">This request has already been decided.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">User Onboarding</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex gap-2">
+                            <button type="button" id="includeInAssistant" class="btn btn-sm btn-outline-primary"
+                                    title="Include questionnaire in AI context">Include in AI context
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Data Compatibility</h5>
+                    <div class="d-flex gap-2">
+                        {% if has_data_answers %}
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('onboarding_request_data_format_answers', req_id=req._id) }}"
+                               target="_blank" title="Preview data">Preview Answers</a>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}"
+                               target="_blank" title="Preview OPA data input">Preview OPA input</a>
+                            <button type="button" id="runOpaDataEval" class="btn btn-sm btn-success"
+                                    title="Evaluate data format compatibility via OPA">Evaluate with OPA
+                            </button>
+                            <button type="button" id="includeDataInAssistant" class="btn btn-sm btn-outline-primary"
+                                    title="Include data answers in AI context">Include in AI context</button>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true"
+                               title="Preview data">Preview Answers</a>
+                            <a class="btn btn-sm btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true"
+                               title="Preview OPA data input">Preview OPA input</a>
+                            <button type="button" id="runOpaDataEval" class="btn btn-sm btn-success" disabled
+                                    title="Evaluate data format compatibility via OPA">Evaluate with OPA
+                            </button>
+                            <button type="button" id="includeDataInAssistant" class="btn btn-sm btn-outline-primary" disabled
+                                    title="Include data answers in AI context">Include in AI context</button>
+                        {% endif %}
+                    </div>
+                    {% if not has_data_answers %}
+                        <div class="text-muted small mt-2">No data-format answers were submitted by the participant.</div>
+                    {% endif %}
+                    <div id="opaDataResult" class="mt-3" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Questionnaire Answers</h5>
+
+                    {% if answers._error %}
+                        <div class="alert alert-warning" role="alert">{{ answers._error }}</div>
+                    {% endif %}
+                    {% if answers %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Question ID</th>
+                                    <th>Answer</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for key, val in answers.items() %}
+                                    {% if key != '_error' %}
+                                        <tr>
+                                            <td class="small text-muted">{{ key }}</td>
+                                            <td>
+                                                {% if val is iterable and val is not string %}
+                                                    {{ val | join(', ') }}
+                                                {% else %}
+                                                    {{ val }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No answers found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('includeInAssistant');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    try {
+                        const payload = {
+                            project_id: {{ project.id|tojson }},
+                            request_id: {{ req._id|tojson }},
+                            answers: {{ answers|tojson }}
+                        };
+                        const text = 'Onboarding questionnaire context for project ' + {{ project.id|tojson }} + ' / request #' + {{ req._id|tojson }} + ':\n' + JSON.stringify(payload, null, 2);
+                        if (window.attachAssistantContext) {
+                            window.attachAssistantContext(text);
+                        } else {
+                            alert('Assistant is not loaded.');
+                        }
+                        if (window.openAssistantPanel) window.openAssistantPanel();
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to attach context: ' + err.message);
+                    }
+                });
+            }
+
+            const runBtn = document.getElementById('runOpaDataEval');
+            const resultDiv = document.getElementById('opaDataResult');
+            if (runBtn && resultDiv) {
+                runBtn.addEventListener('click', async () => {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = '<div class="alert alert-info">Running OPA evaluation…</div>';
+                    try {
+                        const resp = await fetch('{{ url_for('onboarding_request_data_format_eval', req_id=req._id) }}');
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data && data.error ? data.error : 'HTTP ' + resp.status);
+                        const dec = data.decision || {};
+                        const allow = !!dec.allow;
+                        const denies = dec.deny_reasons || [];
+                        const reqs = dec.requirements || [];
+                        const notes = dec.notes || [];
+                        let html = '';
+                        html += '<div class="d-flex align-items-center mb-2">' +
+                            (allow ? '<span class="badge bg-success me-2">ALLOW</span>' : '<span class="badge bg-danger me-2">DENY</span>') +
+                            '<span class="fw-semibold">Data format compatibility ' + (allow ? 'approved' : 'rejected') + '</span>' +
+                            '</div>';
+                        if (denies.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Deny reasons</div><ul class="mb-0">' + denies.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (reqs.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Requirements / recommendations</div><ul class="mb-0">' + reqs.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (notes.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Notes</div><ul class="mb-0">' + notes.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (!denies.length && !reqs.length && !notes.length) {
+                            html += '<div class="text-muted">No specific reasons or notes provided by policy.</div>';
+                        }
+                        resultDiv.innerHTML = '<div class="card bg-light"><div class="card-body">' + html + '</div></div>';
+                    } catch (err) {
+                        resultDiv.innerHTML = '<div class="alert alert-danger">OPA evaluation failed: ' + escapeHtml(err.message) + '</div>';
+                    }
+                });
+            }
+
+            // Include data-format answers in assistant context
+            const includeDataBtn = document.getElementById('includeDataInAssistant');
+            if (includeDataBtn) {
+                includeDataBtn.addEventListener('click', async () => {
+                    try {
+                        const resp = await fetch('{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}');
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data && data.error ? data.error : 'HTTP ' + resp.status);
+                        const payload = {
+                            project_id: {{ project.id|tojson }},
+                            request_id: {{ req._id|tojson }},
+                            data_format_provided: data && data.provided ? data.provided : {},
+                        };
+                        const text = 'Data-format answers for project ' + {{ project.id|tojson }} + ' / request #' + {{ req._id|tojson }} + ' (applicant-provided):\n' + JSON.stringify(payload, null, 2);
+                        if (window.attachAssistantContext) {
+                            window.attachAssistantContext(text);
+                        } else {
+                            alert('Assistant is not loaded.');
+                        }
+                        if (window.openAssistantPanel) window.openAssistantPanel();
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to attach data-format context: ' + err.message);
+                    }
+                });
+            }
+
+            function escapeHtml(s) {
+                return s
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+        })();
+    </script>
 {% endblock %}

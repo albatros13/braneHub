@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "New FDP Project Input",
+  "description": "Structured input produced from new_project_questionnaire.json for creating a new FDP project entry.",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Project title"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Primary contact email"
+    },
+    "institution": {
+      "type": "string",
+      "description": "Research institution"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Study objective"
+    },
+    "data_types": {
+      "type": "array",
+      "description": "Data types required for the study",
+      "items": {
+        "type": "string",
+        "enum": ["Imaging", "EHR", "Genomics", "Wearables", "Lab Results"]
+      },
+      "uniqueItems": true
+    },
+    "sensitivity": {
+      "type": "string",
+      "description": "Data sensitivity level",
+      "enum": ["Low", "Medium", "High"],
+      "default": "Medium"
+    },
+    "security_measures": {
+      "type": "array",
+      "description": "Planned security and infrastructure measures",
+      "items": {
+        "type": "string",
+        "enum": ["Encryption", "Secure Containers", "Access Logs", "Pseudonymization"]
+      },
+      "uniqueItems": true
+    },
+    "legal_basis": {
+      "type": "string",
+      "description": "Legal basis for data processing (empty means not specified)",
+      "enum": ["", "GDPR Consent", "HIPAA TPO", "Public Interest", "Research with Waiver"]
+    },
+    "third_party": {
+      "type": "string",
+      "description": "Whether third-party collaboration is planned",
+      "enum": ["no", "yes"],
+      "default": "no"
+    },
+    "result_sharing": {
+      "type": "string",
+      "description": "Result sharing policy"
+    },
+    "responsibilities": {
+      "type": "string",
+      "description": "Participant responsibilities"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this input was generated"
+        }
+      }
+    }
+  },
+  "required": ["title", "email", "institution", "objective"]
+}

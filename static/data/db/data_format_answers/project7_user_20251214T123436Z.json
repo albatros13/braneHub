@@ -1,0 +1,111 @@
+{
+  "project_id": "project7",
+  "username": "user",
+  "submitted_at": "20251214T123436Z",
+  "answers": {
+    "storage.used": [
+      "Files",
+      "Databases"
+    ],
+    "storage.files": [
+      "CSV/TSV",
+      "JSON"
+    ],
+    "storage.databases": [
+      "MySQL/MariaDB",
+      "Neo4j"
+    ],
+    "storage.apis_streams": [],
+    "storage.object_store": [],
+    "storage.source_of_truth": "",
+    "schema.json_schema": "Yes",
+    "schema.openapi": "Yes",
+    "schema.graphql": "Yes",
+    "schema.xml_xsd": "Yes",
+    "schema.avro": "",
+    "schema.protobuf": "",
+    "schema.sql_ddl": "",
+    "schema.data_dictionary": "",
+    "schema.other": "",
+    "meta.field_descriptions": "No",
+    "meta.allowed_values_units": "No",
+    "meta.time_handling": "",
+    "meta.provenance": "",
+    "meta.quality_rules": "",
+    "meta.versioning_policy": "",
+    "meta.privacy_legal": "",
+    "delivery.methods": [
+      "Downloadable files",
+      "API (REST)",
+      "Database connection",
+      "Object store path"
+    ],
+    "delivery.files_format": "",
+    "delivery.api_spec": "",
+    "delivery.db_details": "",
+    "delivery.object_store_path": "",
+    "delivery.stream_details": "",
+    "ops.update_cadence": "",
+    "ops.size_profile": "",
+    "ops.error_retries": "",
+    "ops.contact": ""
+  },
+  "data_format": {
+    "storage": {
+      "used": [
+        "Files",
+        "Databases"
+      ],
+      "files": [
+        "CSV/TSV",
+        "JSON"
+      ],
+      "databases": [
+        "MySQL/MariaDB",
+        "Neo4j"
+      ],
+      "apis_streams": [],
+      "object_store": [],
+      "source_of_truth": ""
+    },
+    "schema": {
+      "json_schema": "Yes",
+      "openapi": "Yes",
+      "graphql": "Yes",
+      "xml_xsd": "Yes",
+      "avro": "",
+      "protobuf": "",
+      "sql_ddl": "",
+      "data_dictionary": "",
+      "other": ""
+    },
+    "meta": {
+      "field_descriptions": "No",
+      "allowed_values_units": "No",
+      "time_handling": "",
+      "provenance": "",
+      "quality_rules": "",
+      "versioning_policy": "",
+      "privacy_legal": ""
+    },
+    "delivery": {
+      "methods": [
+        "Downloadable files",
+        "API (REST)",
+        "Database connection",
+        "Object store path"
+      ],
+      "files_format": "",
+      "api_spec": "",
+      "db_details": "",
+      "object_store_path": "",
+      "stream_details": ""
+    },
+    "ops": {
+      "update_cadence": "",
+      "size_profile": "",
+      "error_retries": "",
+      "contact": ""
+    }
+  }
+}
