@@ -1,0 +1,43 @@
+{#
+Reusable code/JSON preview block.
+Parameters:
+- id: required unique string (used for DOM ids)
+- title: string (optional) — heading above the code block
+- language: string (e.g., 'json', 'rego', 'python', 'bash') — used for Prism language class
+- content: string — the code/content to render
+- download_href: optional URL to download the source
+- copy_button: bool (default true) — show copy button
+- max_height: CSS value (e.g., '420px') for scroll area
+#}
+<div class="card h-100">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="card-title mb-0">{{ title|default('Preview') }}</h5>
+      <div class="d-flex align-items-center gap-2">
+        {% if download_href %}
+          <a class="btn btn-sm btn-outline-secondary" href="{{ download_href }}" target="_blank">Download</a>
+        {% endif %}
+        {% if copy_button is not defined or copy_button %}
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyPrev_{{ id }}()">Copy</button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="border rounded" style="max-height: 420px; overflow: auto;">
+      <pre class="m-0"><code id="codePrev_{{ id }}" class="language-{{ language|default('markup') }}">{{ content }}</code></pre>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  window.copyPrev_{{ id }} = function(){
+    try {
+      const el = document.getElementById('codePrev_{{ id }}');
+      if (!el) return;
+      const text = el.innerText;
+      navigator.clipboard.writeText(text).then(()=>{
+        // Optional toast
+      });
+    } catch(e) { console.error(e); }
+  }
+})();
+</script>

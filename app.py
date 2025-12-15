@@ -6,6 +6,7 @@ import os
 import re
 from src.OPAClient import OPAClient
 from src.services.data_format import has_data_answers_for_request, build_opa_input_for_request
+from src.services.onboarding import build_onboarding_opa_input
 
 app = Flask(__name__)
 # NOTE: Replace this with a secure random value in production
@@ -786,6 +787,207 @@ def onboarding_request_data_format_opa_input(req_id):
     base_dir = os.path.dirname(__file__)
     opa_input = build_opa_input_for_request(rec, proj, base_dir)
     return jsonify(opa_input)
+
+
+@app.route('/requests/<int:req_id>/data-format-opa-input/preview')
+@login_required
+def onboarding_request_data_format_opa_input_preview(req_id):
+    """Render a page that previews the OPA input JSON alongside the Rego policy file."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    base_dir = os.path.dirname(__file__)
+    opa_input = build_opa_input_for_request(rec, proj, base_dir)
+    opa_input_pretty = json.dumps(opa_input, ensure_ascii=False, indent=2)
+
+    # Policy path and content
+    policy_rel = os.path.join('static', 'data', 'policies', 'data_format_acceptance.rego').replace('\\','/')
+    policy_abs = os.path.join(base_dir, policy_rel.replace('/', os.sep))
+    try:
+        with open(policy_abs, 'r', encoding='utf-8') as f:
+            rego_policy_content = f.read()
+    except Exception as e:
+        rego_policy_content = f"Failed to load policy file: {e}"
+
+    rego_download_href = url_for('static', filename='data/policies/data_format_acceptance.rego')
+
+    # Provide a downloadable JSON blob via data URL in the page (or None)
+    opa_input_download_href = None
+
+    return render_template(
+        'opa_input_preview.html',
+        req={**rec, '_id': req_id},
+        project=proj,
+        opa_input_pretty=opa_input_pretty,
+        rego_policy_content=rego_policy_content,
+        rego_download_href=rego_download_href,
+        opa_input_download_href=opa_input_download_href
+    )
+
+
+@app.route('/requests/<int:req_id>/onboarding-opa-input')
+@login_required
+def onboarding_request_onboarding_opa_input(req_id):
+    """Generate OPA input JSON for onboarding.rego (User Onboarding policy) based on questionnaire answers."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    base_dir = os.path.dirname(__file__)
+    opa_input = build_onboarding_opa_input(rec, proj, base_dir)
+    return jsonify(opa_input)
+
+
+@app.route('/requests/<int:req_id>/onboarding-opa-input/preview')
+@login_required
+def onboarding_request_onboarding_opa_input_preview(req_id):
+    """Render a page that previews the onboarding OPA input JSON alongside the onboarding.rego policy file."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    base_dir = os.path.dirname(__file__)
+    opa_input = build_onboarding_opa_input(rec, proj, base_dir)
+    opa_input_pretty = json.dumps(opa_input, ensure_ascii=False, indent=2)
+
+    # Load onboarding.rego
+    policy_rel = os.path.join('static', 'data', 'policies', 'onboarding.rego').replace('\\','/')
+    policy_abs = os.path.join(base_dir, policy_rel.replace('/', os.sep))
+    try:
+        with open(policy_abs, 'r', encoding='utf-8') as f:
+            rego_policy_content = f.read()
+    except Exception as e:
+        rego_policy_content = f"Failed to load policy file: {e}"
+
+    rego_download_href = url_for('static', filename='data/policies/onboarding.rego')
+
+    return render_template(
+        'opa_input_preview.html',
+        req={**rec, '_id': req_id},
+        project=proj,
+        opa_input_pretty=opa_input_pretty,
+        rego_policy_content=rego_policy_content,
+        rego_download_href=rego_download_href,
+        opa_input_download_href=None,
+        policy_title='Policy: onboarding.rego',
+        policy_source_path='static/data/policies/onboarding.rego'
+    )
+
+
+@app.route('/requests/<int:req_id>/onboarding-opa-eval')
+@login_required
+def onboarding_request_onboarding_eval(req_id):
+    """Upload onboarding.rego to OPA and evaluate decision for this request."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    base_dir = os.path.dirname(__file__)
+    input_obj = build_onboarding_opa_input(rec, proj, base_dir)
+
+    # Load policy text
+    policy_path = os.path.join(base_dir, 'static', 'data', 'policies', 'onboarding.rego')
+    try:
+        with open(policy_path, 'r', encoding='utf-8') as f:
+            rego_text = f.read()
+    except Exception as e:
+        return jsonify({"error": f"Failed to load policy: {e}"}), 500
+
+    # Evaluate via OPAClient
+    try:
+        opa = OPAClient(os.getenv('OPA_URL', 'http://localhost:8181'))
+        # Upload
+        opa.put_policy('onboarding', rego_text)
+        # Query decision at data path fl/onboarding/decision
+        decision = opa.query_data_path('fl/onboarding/decision', input_obj)
+        return jsonify({"decision": decision})
+    except Exception as e:
+        return jsonify({"error": f"OPA evaluation failed: {e}"}), 502
+
+
+@app.route('/requests/<int:req_id>/questionnaire-answers')
+@login_required
+def onboarding_request_questionnaire_answers(req_id):
+    """Render a human-readable preview of the applicant's questionnaire answers (general onboarding questionnaire)."""
+    all_reqs = load_onboarding_requests()
+    if req_id < 0 or req_id >= len(all_reqs):
+        abort(404)
+    rec = all_reqs[req_id]
+    proj = next((p for p in projects_catalog if str(p.get('id')) == str(rec.get('project_id'))), None)
+    if not proj:
+        abort(404)
+    if proj.get('owner') != session['user']:
+        abort(403)
+
+    # Load the referenced answers_file if any and flatten its 'input' structure when present
+    answers = {}
+    answers_rel = rec.get('answers_file')
+    answers_abs = None
+    load_error = None
+    try:
+        if answers_rel:
+            answers_abs = os.path.join(os.path.dirname(__file__), answers_rel.replace('/', os.sep))
+            if os.path.isfile(answers_abs):
+                with open(answers_abs, 'r', encoding='utf-8') as f:
+                    payload = json.load(f)
+                    if isinstance(payload.get('input'), dict):
+                        def flatten(prefix, obj, out):
+                            if isinstance(obj, dict):
+                                for k, v in obj.items():
+                                    flatten(f"{prefix}.{k}" if prefix else k, v, out)
+                            else:
+                                out[prefix] = v if (v := obj) is not None else ''
+                        flat = {}
+                        flatten('', payload.get('input'), flat)
+                        answers = flat
+                    else:
+                        answers = payload.get('answers', {}) or {}
+            else:
+                load_error = 'Answers file was referenced but not found on disk.'
+        else:
+            load_error = 'No questionnaire answers file is associated with this request.'
+    except Exception as e:
+        load_error = f"Failed to load questionnaire answers: {e}"
+
+    # Download link only if file is under static/
+    download_href = None
+    if answers_rel and answers_rel.startswith('static/'):
+        download_href = url_for('static', filename=answers_rel[7:])
+
+    return render_template(
+        'questionnaire_answers_preview.html',
+        req={**rec, '_id': req_id},
+        project=proj,
+        answers=answers,
+        load_error=load_error,
+        source_rel=answers_rel,
+        download_href=download_href
+    )
 
 
 @app.route('/requests/<int:req_id>/data-format-answers')

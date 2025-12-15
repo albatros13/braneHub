@@ -104,11 +104,24 @@
                     <h5 class="card-title">User Onboarding</h5>
                     <div class="d-flex align-items-center">
                         <div class="d-flex gap-2">
+                            {% if answers and not answers._error %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPreviewOnboardingAnswers"
+                               title="Preview questionnaire answers">Preview Answers</button>
+                            {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                               title="Preview questionnaire answers">Preview Answers</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPreviewOnboardingOPA"
+                               title="Preview OPA input for onboarding.rego">Preview OPA input</button>
+                            <button type="button" id="runOpaOnboardingEval" class="btn btn-sm btn-success"
+                                    title="Evaluate user onboarding via OPA">Evaluate with OPA
+                            </button>
                             <button type="button" id="includeInAssistant" class="btn btn-sm btn-outline-primary"
                                     title="Include questionnaire in AI context">Include in AI context
                             </button>
                         </div>
                     </div>
+                    <div id="opaOnboardingResult" class="mt-3" style="display:none;"></div>
                 </div>
             </div>
         </div>
@@ -121,31 +134,33 @@
                     <h5 class="card-title">Data Compatibility</h5>
                     <div class="d-flex gap-2">
                         {% if has_data_answers %}
-                            <a class="btn btn-sm btn-outline-secondary"
-                               href="{{ url_for('onboarding_request_data_format_answers', req_id=req._id) }}"
-                               target="_blank" title="Preview data">Preview Answers</a>
-                            <a class="btn btn-sm btn-outline-secondary"
-                               href="{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}"
-                               target="_blank" title="Preview OPA data input">Preview OPA input</a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPreviewDataAnswers"
+                               title="Preview data">Preview Answers</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPreviewDataOPA"
+                               title="Preview OPA data input">Preview OPA input</button>
                             <button type="button" id="runOpaDataEval" class="btn btn-sm btn-success"
                                     title="Evaluate data format compatibility via OPA">Evaluate with OPA
                             </button>
                             <button type="button" id="includeDataInAssistant" class="btn btn-sm btn-outline-primary"
-                                    title="Include data answers in AI context">Include in AI context</button>
+                                    title="Include data answers in AI context">Include in AI context
+                            </button>
                         {% else %}
-                            <a class="btn btn-sm btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true"
-                               title="Preview data">Preview Answers</a>
-                            <a class="btn btn-sm btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true"
-                               title="Preview OPA data input">Preview OPA input</a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                               title="Preview data">Preview Answers</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                               title="Preview OPA data input">Preview OPA input</button>
                             <button type="button" id="runOpaDataEval" class="btn btn-sm btn-success" disabled
                                     title="Evaluate data format compatibility via OPA">Evaluate with OPA
                             </button>
-                            <button type="button" id="includeDataInAssistant" class="btn btn-sm btn-outline-primary" disabled
-                                    title="Include data answers in AI context">Include in AI context</button>
+                            <button type="button" id="includeDataInAssistant" class="btn btn-sm btn-outline-primary"
+                                    disabled
+                                    title="Include data answers in AI context">Include in AI context
+                            </button>
                         {% endif %}
                     </div>
                     {% if not has_data_answers %}
-                        <div class="text-muted small mt-2">No data-format answers were submitted by the participant.</div>
+                        <div class="text-muted small mt-2">No data-format answers were submitted by the participant.
+                        </div>
                     {% endif %}
                     <div id="opaDataResult" class="mt-3" style="display:none;"></div>
                 </div>
@@ -153,45 +168,16 @@
         </div>
     </div>
 
+    <!-- Inline Preview Area -->
     <div class="row g-4 mt-1">
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title mb-0">Questionnaire Answers</h5>
-
-                    {% if answers._error %}
-                        <div class="alert alert-warning" role="alert">{{ answers._error }}</div>
-                    {% endif %}
-                    {% if answers %}
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                <tr>
-                                    <th>Question ID</th>
-                                    <th>Answer</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for key, val in answers.items() %}
-                                    {% if key != '_error' %}
-                                        <tr>
-                                            <td class="small text-muted">{{ key }}</td>
-                                            <td>
-                                                {% if val is iterable and val is not string %}
-                                                    {{ val | join(', ') }}
-                                                {% else %}
-                                                    {{ val }}
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No answers found.</p>
-                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">Preview</h5>
+                        <div class="text-muted small" id="inlinePreviewMeta" style="display:none;"></div>
+                    </div>
+                    <div id="inlinePreviewArea" class="border rounded p-2" style="min-height: 120px; display:none; overflow:auto;"></div>
                 </div>
             </div>
         </div>
@@ -257,6 +243,165 @@
                         resultDiv.innerHTML = '<div class="card bg-light"><div class="card-body">' + html + '</div></div>';
                     } catch (err) {
                         resultDiv.innerHTML = '<div class="alert alert-danger">OPA evaluation failed: ' + escapeHtml(err.message) + '</div>';
+                    }
+                });
+            }
+
+            // Onboarding OPA evaluation button
+            const obBtn = document.getElementById('runOpaOnboardingEval');
+            const obResult = document.getElementById('opaOnboardingResult');
+            if (obBtn && obResult) {
+                obBtn.addEventListener('click', async () => {
+                    obResult.style.display = 'block';
+                    obResult.innerHTML = '<div class="alert alert-info">Running OPA evaluation…</div>';
+                    try {
+                        const resp = await fetch('{{ url_for('onboarding_request_onboarding_eval', req_id=req._id) }}');
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data && data.error ? data.error : 'HTTP ' + resp.status);
+                        const dec = data.decision || {};
+                        const allow = !!dec.allow_participation;
+                        const denies = dec.deny_reasons || [];
+                        const reqs = dec.requirements || [];
+                        const notes = dec.notes || [];
+                        let html = '';
+                        html += '<div class="d-flex align-items-center mb-2">' +
+                            (allow ? '<span class="badge bg-success me-2">ALLOW</span>' : '<span class="badge bg-danger me-2">DENY</span>') +
+                            '<span class="fw-semibold">User onboarding ' + (allow ? 'approved' : 'rejected') + '</span>' +
+                            '</div>';
+                        if (denies.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Deny reasons</div><ul class="mb-0">' + denies.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (reqs.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Requirements / recommendations</div><ul class="mb-0">' + reqs.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (notes.length) {
+                            html += '<div class="mb-2"><div class="fw-semibold">Notes</div><ul class="mb-0">' + notes.map(r => '<li>' + escapeHtml(String(r)) + '</li>').join('') + '</ul></div>';
+                        }
+                        if (!denies.length && !reqs.length && !notes.length) {
+                            html += '<div class="text-muted">No specific reasons or notes provided by policy.</div>';
+                        }
+                        obResult.innerHTML = '<div class="card bg-light"><div class="card-body">' + html + '</div></div>';
+                    } catch (err) {
+                        obResult.innerHTML = '<div class="alert alert-danger">OPA evaluation failed: ' + escapeHtml(err.message) + '</div>';
+                    }
+                });
+            }
+
+            // Inline preview logic
+            const previewArea = document.getElementById('inlinePreviewArea');
+            const previewMeta = document.getElementById('inlinePreviewMeta');
+            const btnPrevOnbAns = document.getElementById('btnPreviewOnboardingAnswers');
+            const btnPrevDataAns = document.getElementById('btnPreviewDataAnswers');
+            const btnPrevOnbOPA = document.getElementById('btnPreviewOnboardingOPA');
+            const btnPrevDataOPA = document.getElementById('btnPreviewDataOPA');
+
+            const onboardAnswers = {{ answers|tojson }};
+
+            function ensurePrism(cb){
+                const need = ['https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css',
+                              'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js',
+                              'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js'];
+                let loaded = 0;
+                function done(){ try { if (window.Prism) window.Prism.highlightAllUnder(previewArea); } catch(_){}; if (cb) cb(); }
+                // CSS
+                if (!document.querySelector('link[data-prism]')){
+                    const l = document.createElement('link'); l.rel='stylesheet'; l.href=need[0]; l.setAttribute('data-prism','1'); document.head.appendChild(l);
+                }
+                // core
+                function loadScript(src, attr){
+                    if (document.querySelector(`script[src="${src}"]`)) { loaded++; if (loaded>=2) done(); return; }
+                    const s=document.createElement('script'); s.src=src; if (attr) Object.entries(attr).forEach(([k,v])=>s.setAttribute(k,v)); s.onload=()=>{loaded++; if (loaded>=2) done();}; document.body.appendChild(s);
+                }
+                loadScript(need[1]);
+                loadScript(need[2], {'data-autoloader-path':'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/'});
+            }
+
+            function showPreview(html, meta){
+                if (previewMeta){ if (meta){ previewMeta.textContent = meta; previewMeta.style.display='block'; } else { previewMeta.style.display='none'; } }
+                if (previewArea){ previewArea.innerHTML = html; previewArea.style.display='block'; }
+            }
+
+            function renderKeyValueTable(obj){
+                const rows = Object.keys(obj||{}).sort().map(k=>`<tr><td class="text-muted small">${escapeHtml(k)}</td><td>${escapeHtml(String((obj||{})[k]))}</td></tr>`).join('');
+                return `<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>${rows||'<tr><td colspan="2" class="text-muted">No data</td></tr>'}</tbody></table></div>`;
+            }
+
+            function renderCode(language, content){
+                return `<pre class="m-0"><code class="language-${language}">${escapeHtml(content)}</code></pre>`;
+            }
+
+            if (btnPrevOnbAns){
+                btnPrevOnbAns.addEventListener('click', ()=>{
+                    const html = renderKeyValueTable(onboardAnswers && !onboardAnswers._error ? onboardAnswers : {});
+                    showPreview(html, 'Questionnaire answers');
+                });
+            }
+
+            if (btnPrevDataAns){
+                btnPrevDataAns.addEventListener('click', async ()=>{
+                    showPreview('<div class="text-muted">Loading data-format answers…</div>');
+                    try{
+                        const resp = await fetch('{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}');
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data && data.error ? data.error : 'HTTP '+resp.status);
+                        const provided = data && data.provided ? data.provided : {};
+                        const html = renderCode('json', JSON.stringify(provided, null, 2));
+                        showPreview(html, 'Data compatibility: applicant-provided answers (JSON)');
+                        ensurePrism();
+                    } catch(err){
+                        showPreview('<div class="alert alert-danger">Failed to load: '+escapeHtml(err.message)+'</div>');
+                    }
+                });
+            }
+
+            async function fetchText(url){ const r = await fetch(url); if (!r.ok) throw new Error('HTTP '+r.status); return await r.text(); }
+
+            if (btnPrevOnbOPA){
+                btnPrevOnbOPA.addEventListener('click', async ()=>{
+                    showPreview('<div class="text-muted">Loading OPA input…</div>');
+                    try{
+                        const [inputResp, policyText] = await Promise.all([
+                            fetch('{{ url_for('onboarding_request_onboarding_opa_input', req_id=req._id) }}').then(r=>r.json()),
+                            fetchText('{{ url_for('static', filename='data/policies/onboarding.rego') }}')
+                        ]);
+                        if (inputResp.error) throw new Error(inputResp.error);
+                        const inputPretty = JSON.stringify(inputResp, null, 2);
+                        const html = `
+                        <div class="row g-3">
+                          <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('json', inputPretty)}</div></div>
+                          <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('rego', policyText)}</div>
+                            <div class="mt-2 text-muted small">Source: <a href="{{ url_for('static', filename='data/policies/onboarding.rego') }}" target="_blank">static/data/policies/onboarding.rego</a></div>
+                          </div>
+                        </div>`;
+                        showPreview(html, 'OPA input (onboarding.rego)');
+                        ensurePrism();
+                    } catch(err){
+                        showPreview('<div class="alert alert-danger">Failed to load: '+escapeHtml(err.message)+'</div>');
+                    }
+                });
+            }
+
+            if (btnPrevDataOPA){
+                btnPrevDataOPA.addEventListener('click', async ()=>{
+                    showPreview('<div class="text-muted">Loading OPA input…</div>');
+                    try{
+                        const [inputResp, policyText] = await Promise.all([
+                            fetch('{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}').then(r=>r.json()),
+                            fetchText('{{ url_for('static', filename='data/policies/data_format_acceptance.rego') }}')
+                        ]);
+                        if (inputResp.error) throw new Error(inputResp.error);
+                        const inputPretty = JSON.stringify(inputResp, null, 2);
+                        const html = `
+                        <div class="row g-3">
+                          <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('json', inputPretty)}</div></div>
+                          <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('rego', policyText)}</div>
+                            <div class="mt-2 text-muted small">Source: <a href="{{ url_for('static', filename='data/policies/data_format_acceptance.rego') }}" target="_blank">static/data/policies/data_format_acceptance.rego</a></div>
+                          </div>
+                        </div>`;
+                        showPreview(html, 'OPA input (data_format_acceptance.rego)');
+                        ensurePrism();
+                    } catch(err){
+                        showPreview('<div class="alert alert-danger">Failed to load: '+escapeHtml(err.message)+'</div>');
                     }
                 });
             }

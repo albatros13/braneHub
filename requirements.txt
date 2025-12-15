@@ -13,9 +13,5 @@ python-dateutil==2.9.0.post0
 pytz==2024.1
 flask_toastr==0.5.8
 qdrant-client==1.12.1
-llama-index-core==0.11.23
-llama-index-readers-file==0.3.0
-llama-index-vector-stores-qdrant
 sentence-transformers
 anthropic
-replicate
