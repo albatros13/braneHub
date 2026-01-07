@@ -7,6 +7,7 @@
  - Instructions https://www.openpolicyagent.org/docs?current-os=windows#running-opa 
 ### Run as server
  - opa run --server --set=decision_logs.console=true
+ - OPA server is available at http://localhost:8181 
   
 ## Server-side integration (e.g., Flask in BraneHub)
  - src/OPAClient.py

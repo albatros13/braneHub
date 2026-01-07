@@ -1059,7 +1059,10 @@ def onboarding_request_data_format_eval(req_id):
     # Reuse the input generator to assemble expected/provided
     with app.test_request_context():
         input_resp = onboarding_request_data_format_opa_input(req_id)
-        input_obj = input_resp.get_json()
+        try:
+            input_obj = input_resp.get_json(force=True) or {}
+        except Exception:
+            input_obj = {}
 
     # Load policy text
     policy_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'data_format_acceptance.rego')
@@ -1072,7 +1075,9 @@ def onboarding_request_data_format_eval(req_id):
     # Evaluate via OPAClient
     try:
         opa = OPAClient(os.getenv('OPA_URL', 'http://localhost:8181'))
-        decision = opa.evaluate_data_format(rego_text, {"expected": input_obj.get('expected', {}), "provided": input_obj.get('provided', {})})
+        expected = input_obj.get('expected', {}) if isinstance(input_obj, dict) else {}
+        provided = input_obj.get('provided', {}) if isinstance(input_obj, dict) else {}
+        decision = opa.evaluate_data_format(rego_text, {"expected": expected, "provided": provided})
         return jsonify({"decision": decision})
     except Exception as e:
         return jsonify({"error": f"OPA evaluation failed: {e}"}), 502

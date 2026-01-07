@@ -53,5 +53,12 @@
     "submitted_at": "20251214T123444Z",
     "answers_file": "static/data/db/onboarding_answers/project7_user_20251214T123444Z.json",
     "status": "submitted"
+  },
+  {
+    "project_id": "project2",
+    "username": "main",
+    "submitted_at": "20260107T222344Z",
+    "answers_file": "static/data/db/onboarding_answers/project2_main_20260107T222344Z.json",
+    "status": "submitted"
   }
 ]

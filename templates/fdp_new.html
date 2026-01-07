@@ -13,8 +13,9 @@
         {% if error %}
           <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
-        <div class="mb-3">
+        <div class="mb-3 d-flex gap-2">
           <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('fdp_expected_data_format') }}">Describe expected data format</a>
+          <button type="button" id="autofill-fdp" class="btn btn-sm btn-outline-primary">Auto-fill with sample data</button>
         </div>
         <form method="post" action="{{ url_for('fdp_new') }}">
           <div class="row g-3">
@@ -109,4 +110,80 @@
     </div>
   </div>
 </div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+  const byName = (n) => document.querySelectorAll(`[name="${n}"]`);
+  const setInputValue = (name, value) => {
+    const els = byName(name);
+    if (!els || els.length === 0) return;
+    const el = els[0];
+    const tag = (el.tagName || '').toLowerCase();
+    const type = (el.getAttribute('type') || '').toLowerCase();
+
+    if (tag === 'textarea') {
+      el.value = value;
+      return;
+    }
+    if (tag === 'select') {
+      if (el.multiple && Array.isArray(value)) {
+        Array.from(el.options).forEach(opt => {
+          opt.selected = value.includes(opt.value);
+        });
+      } else {
+        el.value = value;
+      }
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    if (type === 'radio') {
+      els.forEach(r => { r.checked = (r.value === value); });
+      return;
+    }
+    if (type === 'checkbox') {
+      // checklist: multiple checkboxes share the same name
+      const vals = Array.isArray(value) ? value : [value];
+      els.forEach(chk => { chk.checked = vals.includes(chk.value); });
+      return;
+    }
+    // default input
+    els.forEach(e => e.value = value);
+  };
+
+  const sample = {
+    title: 'FDP Demo: Multi-center Imaging Study',
+    institution: 'Brane Research Institute',
+    email: 'owner@example.org',
+    objective: 'Evaluate federated training on anonymized imaging and EHR metadata across three hospitals to predict outcomes.',
+    data_types: ['Imaging', 'EHR'],
+    sensitivity: 'Medium',
+    security_measures: ['Encryption', 'Secure Containers', 'Access Logs'],
+    result_sharing: 'Aggregate metrics (AUC, loss curves) will be shared. No raw data will leave institutions.',
+    responsibilities: 'Each site ensures proper pseudonymization, access logging, and timely updates.',
+    legal_basis: 'GDPR Consent',
+    third_party: 'no'
+  };
+
+  const runAutofill = () => {
+    setInputValue('title', sample.title);
+    setInputValue('institution', sample.institution);
+    setInputValue('email', sample.email);
+    setInputValue('objective', sample.objective);
+
+    setInputValue('data_types', sample.data_types);
+    setInputValue('sensitivity', sample.sensitivity);
+    setInputValue('security_measures', sample.security_measures);
+
+    setInputValue('result_sharing', sample.result_sharing);
+    setInputValue('responsibilities', sample.responsibilities);
+    setInputValue('legal_basis', sample.legal_basis);
+    setInputValue('third_party', sample.third_party);
+  };
+
+  document.getElementById('autofill-fdp')?.addEventListener('click', runAutofill);
+})();
+</script>
+{% endblock %}
 {% endblock %}

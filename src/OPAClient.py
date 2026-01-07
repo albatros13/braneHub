@@ -29,7 +29,15 @@ class OPAClient:
         payload = {"input": input_obj}
         resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
         resp.raise_for_status()
-        body = resp.json()
+        # OPA should return JSON with a 'result' key, but be defensive
+        body = None
+        try:
+            body = resp.json()
+        except Exception:
+            # Non-JSON or empty body
+            return None
+        if not isinstance(body, dict):
+            return None
         return body.get("result")
 
     def evaluate_data_format(self, rego_text: str, input_obj: dict, policy_id: str = "data_format_acceptance"):
@@ -60,7 +68,12 @@ class OPAClient:
             headers={"Content-Type": "application/json"}
         )
 
-        result = response.json()
+        try:
+            result = response.json()
+        except Exception:
+            return False
+        if not isinstance(result, dict):
+            return False
         return result.get("result", False)
 
     def validate_model_update(self, client_id, model_data, round_number):
@@ -80,7 +93,12 @@ class OPAClient:
             json=payload
         )
 
-        result = response.json()
+        try:
+            result = response.json()
+        except Exception:
+            return False
+        if not isinstance(result, dict):
+            return False
         return result.get("result", False)
 
     def check_aggregation(self, participants, round_info):

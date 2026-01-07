@@ -14,8 +14,9 @@
           <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
         <p class="text-muted">Please complete the onboarding questionnaire to request participation. Your answers will be reviewed by the project owner.</p>
-        <div class="mb-3">
+        <div class="mb-3 d-flex gap-2">
           <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('onboarding_data_format', project_id=project.id) }}">Describe data format</a>
+          <button type="button" id="autofill-onboarding" class="btn btn-sm btn-outline-primary">Auto-fill with sample data</button>
         </div>
         <form method="post" action="{{ form_action or url_for('onboarding', project_id=project.id) }}">
           {% for section in questionnaire.sections %}
@@ -80,4 +81,134 @@
     </div>
   </div>
 </div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+  // Works for onboarding form and the expected data format form (same template)
+  function setRadio(name, value) {
+    document.querySelectorAll(`[name="${name}"]`).forEach(r => {
+      r.checked = (r.value === value);
+    });
+  }
+  function setText(name, value) {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) { el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  function setTextarea(name, value) {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) { el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  function setMulti(name, values) {
+    const sel = document.querySelector(`select[name="${name}"]`);
+    if (!sel) return;
+    const setVals = new Set(values);
+    Array.from(sel.options).forEach(opt => {
+      opt.selected = setVals.has(opt.value);
+    });
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function autoFillExpectedDataFormat() {
+    // IDs in questionnaire use dots; input names use __ replacement.
+    setText('expect__storage__location', 's3://fdp-demo-bucket/project-a/');
+    setMulti('expect__storage__files__acceptable', ['CSV', 'Parquet']);
+    setText('expect__storage__files__max_size_mb', '500');
+
+    setRadio('expect__schema__standard', 'OMOP');
+    setRadio('expect__schema__encoding', 'UTF-8');
+    setTextarea('expect__schema__notes', 'Use OMOP v5.4 tables for clinical events; custom extension for imaging metadata.');
+
+    setRadio('expect__delivery__method', 'SFTP');
+    setRadio('expect__delivery__frequency', 'Weekly');
+
+    // If "other" fields exist, set examples
+    setText('expect__schema__standard__other', 'Custom-Schema-X');
+    setText('expect__delivery__method__other', 'HTTPS signed URLs');
+    setText('expect__storage__files__acceptable__other', 'NIfTI-GZ');
+  }
+
+  function autoFillOnboarding() {
+    // Organization
+    setText('organization__name', 'Acme Health Institute');
+    setText('organization__primaryContact__name', 'Dr. Jane Doe');
+    setText('organization__primaryContact__role', 'Principal Investigator');
+    setText('organization__primaryContact__email', 'jane.doe@acmehealth.org');
+    setText('organization__primaryContact__phone', '+1-555-0100');
+
+    setText('organization__dpoContact__name', 'Alex Smith');
+    setText('organization__dpoContact__role', 'Data Protection Officer');
+    setText('organization__dpoContact__email', 'dpo@acmehealth.org');
+
+    setMulti('organization__jurisdictions', ['EU', 'US']);
+    setText('organization__jurisdictions__other', 'CA-BC');
+
+    // Nature of Data
+    setRadio('dataNature__involvesHumanResearch', 'Yes');
+    setRadio('dataNature__retrospectiveConsent', 'Unsure');
+
+    // Ethics & Legal
+    setRadio('ethicalLegal__irbApproval', 'Yes');
+
+    // Identifiability
+    setRadio('identifiability__directIdentifiers', 'No');
+    setRadio('identifiability__quasiIdentifiers', 'Yes');
+    setRadio('identifiability__processingLevel', 'Pseudonymized');
+    setText('identifiability__processingLevel__other', '');
+
+    // Security & Infrastructure
+    setRadio('securityInfrastructure__auditLoggingRequired', 'Conditional');
+    setRadio('securityInfrastructure__networkConnectionPolicy', 'ProxyOnly');
+    setMulti('securityInfrastructure__securityCertifications', ['ISO27001', 'HIPAA']);
+    setText('securityInfrastructure__securityCertifications__other', 'NIST 800-53');
+
+    // Data Governance
+    setRadio('dataGovernance__agreementsExist', 'Yes');
+    setRadio('dataGovernance__modelUpdatesAllowed', 'AfterDifferentialPrivacy');
+    setRadio('dataGovernance__requiresPerRoundApproval', 'No');
+
+    // Retention & Revocation
+    setRadio('retentionRevocation__requiresUnlearning', 'CaseByCase');
+  }
+
+  function autoFillGeneric() {
+    // Fallback: choose first radio in each group and select first two in multiselects
+    const seen = new Set();
+    document.querySelectorAll('input[type="radio"]').forEach(r => {
+      if (seen.has(r.name)) return;
+      const group = document.querySelectorAll(`input[type="radio"][name="${r.name}"]`);
+      if ([...group].every(x => !x.checked) && group[0]) group[0].checked = true;
+      seen.add(r.name);
+    });
+    document.querySelectorAll('select[multiple]').forEach(sel => {
+      const opts = Array.from(sel.options);
+      opts.forEach((opt, idx) => opt.selected = idx < Math.min(2, opts.length));
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  function runAutofill() {
+    try {
+      // Detect expected-data-format by a known field
+      if (document.querySelector('[name="expect__storage__location"]')) {
+        autoFillExpectedDataFormat();
+        return;
+      }
+      // Detect onboarding by a known field
+      if (document.querySelector('[name="organization__name"]') || document.querySelector('[name="organization__primaryContact__email"]')) {
+        autoFillOnboarding();
+        return;
+      }
+      // Fallback
+      autoFillGeneric();
+    } catch (e) {
+      console.warn('Autofill error', e);
+    }
+  }
+
+  document.getElementById('autofill-onboarding')?.addEventListener('click', runAutofill);
+})();
+</script>
+{% endblock %}
 {% endblock %}
