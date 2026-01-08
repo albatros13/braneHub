@@ -1,0 +1,6 @@
+{
+  "input": {
+    "location": "NL",
+    "acceptable_locations": ["NL", "BE", "DE"]
+  }
+}

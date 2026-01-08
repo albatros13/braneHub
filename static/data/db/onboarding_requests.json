@@ -60,5 +60,12 @@
     "submitted_at": "20260107T222344Z",
     "answers_file": "static/data/db/onboarding_answers/project2_main_20260107T222344Z.json",
     "status": "submitted"
+  },
+  {
+    "project_id": "project9",
+    "username": "participant",
+    "submitted_at": "20260108T120727Z",
+    "answers_file": "static/data/db/onboarding_answers/project9_participant_20260108T120727Z.json",
+    "status": "submitted"
   }
 ]

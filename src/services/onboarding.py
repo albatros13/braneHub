@@ -70,8 +70,6 @@ def build_onboarding_opa_input(rec: Dict[str, Any], proj: Dict[str, Any], base_d
     # Try multiple possible keys for each field
     get = flat.get
 
-    # NK debug - add OPA request test
-
     input_obj: Dict[str, Any] = {
         'dataNature': {
             'involvesHumanResearch': _to_bool(_first_nonempty(

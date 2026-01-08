@@ -1,0 +1,87 @@
+{
+  "project_id": "project2",
+  "username": "main",
+  "submitted_at": "20260107T222344Z",
+  "answers": {
+    "organization.name": "Acme Health Institute",
+    "organization.primaryContact.name": "Dr. Jane Doe",
+    "organization.primaryContact.role": "Principal Investigator",
+    "organization.primaryContact.email": "jane.doe@acmehealth.org",
+    "organization.primaryContact.phone": "+1-555-0100",
+    "organization.dpoContact.name": "Alex Smith",
+    "organization.dpoContact.role": "Data Protection Officer",
+    "organization.dpoContact.email": "dpo@acmehealth.org",
+    "organization.jurisdictions": [
+      "EU",
+      "US",
+      "CA-BC"
+    ],
+    "dataNature.involvesHumanResearch": "Yes",
+    "dataNature.retrospectiveConsent": "Unsure",
+    "ethicalLegal.irbApproval": "Yes",
+    "identifiability.directIdentifiers": "No",
+    "identifiability.quasiIdentifiers": "Yes",
+    "identifiability.processingLevel": "Pseudonymized",
+    "securityInfrastructure.auditLoggingRequired": "Conditional",
+    "securityInfrastructure.networkConnectionPolicy": "ProxyOnly",
+    "securityInfrastructure.securityCertifications": [
+      "ISO27001",
+      "HIPAA",
+      "NIST 800-53"
+    ],
+    "dataGovernance.agreementsExist": "Yes",
+    "dataGovernance.modelUpdatesAllowed": "AfterDifferentialPrivacy",
+    "dataGovernance.requiresPerRoundApproval": "No",
+    "retentionRevocation.requiresUnlearning": "CaseByCase"
+  },
+  "input": {
+    "organization": {
+      "name": "Acme Health Institute",
+      "primaryContact": {
+        "name": "Dr. Jane Doe",
+        "role": "Principal Investigator",
+        "email": "jane.doe@acmehealth.org",
+        "phone": "+1-555-0100"
+      },
+      "dpoContact": {
+        "name": "Alex Smith",
+        "role": "Data Protection Officer",
+        "email": "dpo@acmehealth.org"
+      },
+      "jurisdictions": [
+        "EU",
+        "US",
+        "CA-BC"
+      ]
+    },
+    "dataNature": {
+      "involvesHumanResearch": true,
+      "retrospectiveConsent": "Unsure"
+    },
+    "ethicalLegal": {
+      "irbApproval": "Yes"
+    },
+    "identifiability": {
+      "directIdentifiers": false,
+      "quasiIdentifiers": true,
+      "processingLevel": "Pseudonymized"
+    },
+    "securityInfrastructure": {
+      "auditLoggingRequired": "Conditional",
+      "networkConnectionPolicy": "ProxyOnly",
+      "securityCertifications": [
+        "ISO27001",
+        "HIPAA",
+        "NIST 800-53"
+      ]
+    },
+    "dataGovernance": {
+      "agreementsExist": true,
+      "modelUpdatesAllowed": "AfterDifferentialPrivacy",
+      "requiresPerRoundApproval": false
+    },
+    "retentionRevocation": {
+      "requiresUnlearning": "CaseByCase"
+    }
+  }
+}

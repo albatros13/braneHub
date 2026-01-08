@@ -7,16 +7,39 @@ class OPAClient:
         self.opa_url = opa_url
 
     def put_policy(self, policy_id: str, rego_text: str):
-        """Upload or replace a policy in OPA.
-        Args:
-            policy_id: identifier for the policy in OPA (e.g., 'data_format_acceptance')
-            rego_text: the policy content in Rego language
-        Returns True on success, raises on HTTP error.
+        """
+        Upload or replace a policy in OPA.
         """
         url = f"{self.opa_url}/v1/policies/{policy_id}"
-        resp = requests.put(url, data=rego_text.encode('utf-8'), headers={"Content-Type": "text/plain"})
+
+        resp = requests.put(
+            url,
+            data=rego_text,  # ✅ Send raw Rego text as body
+            headers={"Content-Type": "text/plain"}  # ✅ Correct content type
+        )
+
         resp.raise_for_status()
         return True
+
+    # def put_policy(self, policy_id: str, rego_text: str):
+    #     url = f"{self.opa_url}/v1/policies/{policy_id}"
+    #
+    #     # Debug: check what we're sending
+    #     print(f"Policy ID: {policy_id}")
+    #     print(f"Policy text length: {len(rego_text)}")
+    #     print(f"First 100 chars: {rego_text[:100]}")
+    #
+    #     resp = requests.put(
+    #         url,
+    #         data=rego_text,
+    #         headers={"Content-Type": "text/plain"}
+    #     )
+    #
+    #     print(f"Response status: {resp.status_code}")
+    #     print(f"Response body: {resp.text}")
+    #
+    #     resp.raise_for_status()
+    #     return True
 
     def query_data_path(self, data_path: str, input_obj: dict):
         """Query a data path decision endpoint (REST) with given input.

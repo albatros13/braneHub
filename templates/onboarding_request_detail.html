@@ -387,7 +387,7 @@
                     try{
                         const [inputResp, policyText] = await Promise.all([
                             fetch('{{ url_for('onboarding_request_data_format_opa_input', req_id=req._id) }}').then(r=>r.json()),
-                            fetchText('{{ url_for('static', filename='data/policies/data_format_acceptance.rego') }}')
+                            fetchText('{{ url_for('static', filename='data/policies/full/data_format_acceptance.rego') }}')
                         ]);
                         if (inputResp.error) throw new Error(inputResp.error);
                         const inputPretty = JSON.stringify(inputResp, null, 2);
@@ -395,7 +395,7 @@
                         <div class="row g-3">
                           <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('json', inputPretty)}</div></div>
                           <div class="col-12 col-xl-6"><div class="border rounded p-2">${renderCode('rego', policyText)}</div>
-                            <div class="mt-2 text-muted small">Source: <a href="{{ url_for('static', filename='data/policies/data_format_acceptance.rego') }}" target="_blank">static/data/policies/data_format_acceptance.rego</a></div>
+                            <div class="mt-2 text-muted small">Source: <a href="{{ url_for('static', filename='data/policies/full/data_format_acceptance.rego') }}" target="_blank">static/data/policies/data_format_acceptance.rego</a></div>
                           </div>
                         </div>`;
                         showPreview(html, 'OPA input (data_format_acceptance.rego)');

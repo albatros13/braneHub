@@ -178,6 +178,36 @@
         "legal_basis_for_processing": "GDPR Consent",
         "third_party_collaboration": false
       }
+    },
+    {
+      "id": "project9",
+      "title": "FDP Demo: Multi-center Imaging Study",
+      "owner": "main",
+      "tags": [
+        "fdp",
+        "imaging",
+        "ehr"
+      ],
+      "type": "FDP",
+      "fdp": {
+        "research_institution": "Brane Research Institute",
+        "contact_email": "owner@example.org",
+        "study_objective": "Evaluate federated training on anonymized imaging and EHR metadata across three hospitals to predict outcomes.",
+        "data_types_required": [
+          "Imaging",
+          "EHR"
+        ],
+        "data_sensitivity_level": "Medium",
+        "security_measures_planned": [
+          "Encryption",
+          "Secure Containers",
+          "Access Logs"
+        ],
+        "result_sharing_policy": "Aggregate metrics (AUC, loss curves) will be shared. No raw data will leave institutions.",
+        "participant_responsibilities": "Each site ensures proper pseudonymization, access logging, and timely updates.",
+        "legal_basis_for_processing": "GDPR Consent",
+        "third_party_collaboration": false
+      }
     }
   ],
   "project_participants": {
@@ -205,6 +235,9 @@
     ],
     "project8": [
       "n.kokash@uva.nl"
+    ],
+    "project9": [
+      "main"
     ]
   },
   "users": [

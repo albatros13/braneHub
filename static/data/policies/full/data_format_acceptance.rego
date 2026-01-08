@@ -5,7 +5,7 @@ package data.format
 #  opa eval -I -d data_format_acceptance.rego -i input.json "data.data.format.decision"
 # Expected input shape:
 #  {
-#    "expected": <object matching data_format_expectations_input_schema.json>,
+#    "expected": <object matching expected_data_input_schema.json>,
 #    "provided": <object matching data_format_input_schema.json>
 #  }
 

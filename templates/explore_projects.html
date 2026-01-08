@@ -24,9 +24,12 @@
                     <strong>{{ p.title }}</strong>
                     <div class="text-muted small">Owner: {{ p.owner }} · Tags: {{ (p.tags or []) | join(', ') }}</div>
                   </div>
-                  <form method="post" action="{{ url_for('join_project', project_id=p.id) }}" class="m-0">
-                    <button type="submit" class="btn btn-primary btn-sm">Request to Join</button>
-                  </form>
+                  <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('project_about', project_id=p.id) }}" class="btn btn-outline-secondary btn-sm">Details</a>
+                    <form method="post" action="{{ url_for('join_project', project_id=p.id) }}" class="m-0">
+                      <button type="submit" class="btn btn-primary btn-sm">Request to Join</button>
+                    </form>
+                  </div>
                 </div>
               </li>
             {% endfor %}

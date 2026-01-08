@@ -1,0 +1,75 @@
+{
+  "title": "Expected Data Formats",
+  "version": "1.0.0",
+  "sections": [
+    {
+      "id": "storage",
+      "title": "Storage & Files",
+      "questions": [
+        {
+          "id": "expect.storage.location",
+          "text": "Preferred storage location (e.g., S3 bucket path, on-prem share)",
+          "type": "text"
+        },
+        {
+          "id": "expect.storage.files.acceptable",
+          "text": "Acceptable file types",
+          "type": "multiselect",
+          "options": ["CSV", "TSV", "Parquet", "JSONL", "DICOM", "NIfTI"],
+          "otherOption": true
+        },
+        {
+          "id": "expect.storage.files.max_size_mb",
+          "text": "Max single file size (MB)",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "schema",
+      "title": "Schema & Semantics",
+      "questions": [
+        {
+          "id": "expect.schema.standard",
+          "text": "Preferred/required schema standard",
+          "type": "radio",
+          "options": ["OMOP", "FHIR", "HL7", "Custom"],
+          "otherOption": true
+        },
+        {
+          "id": "expect.schema.encoding",
+          "text": "Character encoding",
+          "type": "radio",
+          "options": ["UTF-8", "UTF-16", "ISO-8859-1"]
+        },
+        {
+          "id": "expect.schema.notes",
+          "text": "Additional schema notes",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "title": "Delivery & Update Cadence",
+      "questions": [
+        {
+          "id": "expect.delivery.method",
+          "text": "Delivery method",
+          "type": "radio",
+          "options": ["SFTP", "HTTPS", "Object Storage", "Other"],
+          "otherOption": true
+        },
+        {
+          "id": "expect.delivery.frequency",
+          "text": "Update frequency",
+          "type": "radio",
+          "options": ["One-off", "Daily", "Weekly", "Monthly"]
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "generatedAt": "2026-01-07T22:52:00Z"
+  }
+}

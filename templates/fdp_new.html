@@ -124,7 +124,7 @@
     const type = (el.getAttribute('type') || '').toLowerCase();
 
     if (tag === 'textarea') {
-      el.value = value;
+      els.forEach(e => e.value = value);
       return;
     }
     if (tag === 'select') {
@@ -152,35 +152,47 @@
     els.forEach(e => e.value = value);
   };
 
-  const sample = {
-    title: 'FDP Demo: Multi-center Imaging Study',
-    institution: 'Brane Research Institute',
-    email: 'owner@example.org',
-    objective: 'Evaluate federated training on anonymized imaging and EHR metadata across three hospitals to predict outcomes.',
-    data_types: ['Imaging', 'EHR'],
-    sensitivity: 'Medium',
-    security_measures: ['Encryption', 'Secure Containers', 'Access Logs'],
-    result_sharing: 'Aggregate metrics (AUC, loss curves) will be shared. No raw data will leave institutions.',
-    responsibilities: 'Each site ensures proper pseudonymization, access logging, and timely updates.',
-    legal_basis: 'GDPR Consent',
-    third_party: 'no'
-  };
+  // Load sample options from static JSON and randomly pick one to autofill
+  const dataUrl = "{{ url_for('static', filename='data/samples/full/new_project_autofill_options.json') }}";
+  let cachedOptions = null;
 
-  const runAutofill = () => {
-    setInputValue('title', sample.title);
-    setInputValue('institution', sample.institution);
-    setInputValue('email', sample.email);
-    setInputValue('objective', sample.objective);
+  function pickRandom(arr) {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    const idx = Math.floor(Math.random() * arr.length);
+    return arr[idx];
+  }
 
-    setInputValue('data_types', sample.data_types);
-    setInputValue('sensitivity', sample.sensitivity);
-    setInputValue('security_measures', sample.security_measures);
+  function applySample(sample) {
+    if (!sample || typeof sample !== 'object') return;
+    setInputValue('title', sample.title || '');
+    setInputValue('institution', sample.institution || '');
+    setInputValue('email', sample.email || '');
+    setInputValue('objective', sample.objective || '');
 
-    setInputValue('result_sharing', sample.result_sharing);
-    setInputValue('responsibilities', sample.responsibilities);
-    setInputValue('legal_basis', sample.legal_basis);
-    setInputValue('third_party', sample.third_party);
-  };
+    if (sample.data_types) setInputValue('data_types', sample.data_types);
+    if (sample.sensitivity) setInputValue('sensitivity', sample.sensitivity);
+    if (sample.security_measures) setInputValue('security_measures', sample.security_measures);
+
+    setInputValue('result_sharing', sample.result_sharing || '');
+    setInputValue('responsibilities', sample.responsibilities || '');
+    setInputValue('legal_basis', sample.legal_basis || '');
+    if (sample.third_party != null) setInputValue('third_party', sample.third_party);
+  }
+
+  async function runAutofill() {
+    try {
+      if (!cachedOptions) {
+        const resp = await fetch(dataUrl, { headers: { 'Accept': 'application/json' } });
+        if (!resp.ok) throw new Error(`Failed to load samples: ${resp.status}`);
+        const data = await resp.json();
+        cachedOptions = Array.isArray(data) ? data : (data && data.options) ? data.options : [data];
+      }
+      const choice = pickRandom(cachedOptions);
+      applySample(choice);
+    } catch (e) {
+      console.warn('Auto-fill failed:', e);
+    }
+  }
 
   document.getElementById('autofill-fdp')?.addEventListener('click', runAutofill);
 })();

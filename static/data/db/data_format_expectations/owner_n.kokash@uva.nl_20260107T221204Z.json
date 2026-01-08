@@ -1,0 +1,40 @@
+{
+  "username": "n.kokash@uva.nl",
+  "submitted_at": "20260107T221204Z",
+  "answers": {
+    "expect.storage.location": "s3://fdp-demo-bucket/project-a/",
+    "expect.storage.files.acceptable": [
+      "CSV",
+      "Parquet",
+      "NIfTI-GZ"
+    ],
+    "expect.storage.files.max_size_mb": "500",
+    "expect.schema.standard": "OMOP",
+    "expect.schema.encoding": "UTF-8",
+    "expect.schema.notes": "Use OMOP v5.4 tables for clinical events; custom extension for imaging metadata.",
+    "expect.delivery.method": "SFTP",
+    "expect.delivery.frequency": "Weekly"
+  },
+  "expectations": {
+    "storage": {
+      "location": "s3://fdp-demo-bucket/project-a/",
+      "files": {
+        "acceptable": [
+          "CSV",
+          "Parquet",
+          "NIfTI-GZ"
+        ],
+        "max_size_mb": "500"
+      }
+    },
+    "schema": {
+      "standard": "OMOP",
+      "encoding": "UTF-8",
+      "notes": "Use OMOP v5.4 tables for clinical events; custom extension for imaging metadata."
+    },
+    "delivery": {
+      "method": "SFTP",
+      "frequency": "Weekly"
+    }
+  }
+}

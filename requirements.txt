@@ -15,3 +15,4 @@ flask_toastr==0.5.8
 qdrant-client==1.12.1
 sentence-transformers
 anthropic
+pytest

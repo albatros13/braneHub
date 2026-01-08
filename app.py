@@ -266,7 +266,7 @@ def fdp_new():
     error = None
 
     # Load new-project questionnaire config (fields for the form)
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'new_project_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'questionnaires', 'full', 'new_project_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             new_proj_q = json.load(f)
@@ -343,6 +343,7 @@ def fdp_new():
         questionnaire=new_proj_q,
     )
 
+# NK Error -> Describe expected data format at project registration shows onboarding data input form
 
 @app.route('/fdp/expected-data-format', methods=['GET', 'POST'])
 @login_required
@@ -351,7 +352,7 @@ def fdp_expected_data_format():
     Renders a JSON-driven form and stores results under static/data/db/data_format_expectations.
     """
     # Load owner expectations questionnaire
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'data_format_expectations_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'questionnaires', 'full', 'expected_data_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             questionnaire = json.load(f)
@@ -434,6 +435,16 @@ def join_project(project_id):
     return redirect(url_for('onboarding', project_id=project_id))
 
 
+@app.route('/project/<project_id>/about')
+@login_required
+def project_about(project_id):
+    # Show project details with description and data requirements if available
+    project = next((p for p in projects_catalog if str(p.get('id')) == str(project_id)), None)
+    if not project:
+        return redirect(url_for('explore_projects'))
+    return render_template('project_about.html', project=project)
+
+
 if __name__ == '__main__':
     # Run in debug for development convenience
     app.run(debug=True)
@@ -480,7 +491,7 @@ def onboarding(project_id):
         return redirect(url_for('dashboard'))
 
     # Load questionnaire definition
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'onboarding_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'questionnaires', 'full', 'onboarding_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             questionnaire = json.load(f)
@@ -808,7 +819,7 @@ def onboarding_request_data_format_opa_input_preview(req_id):
     opa_input_pretty = json.dumps(opa_input, ensure_ascii=False, indent=2)
 
     # Policy path and content
-    policy_rel = os.path.join('static', 'data', 'policies', 'data_format_acceptance.rego').replace('\\','/')
+    policy_rel = os.path.join('static', 'data', 'policies', 'full', 'data_format_acceptance.rego').replace('\\','/')
     policy_abs = os.path.join(base_dir, policy_rel.replace('/', os.sep))
     try:
         with open(policy_abs, 'r', encoding='utf-8') as f:
@@ -816,7 +827,7 @@ def onboarding_request_data_format_opa_input_preview(req_id):
     except Exception as e:
         rego_policy_content = f"Failed to load policy file: {e}"
 
-    rego_download_href = url_for('static', filename='data/policies/data_format_acceptance.rego')
+    rego_download_href = url_for('static', filename='data/policies/full/data_format_acceptance.rego')
 
     # Provide a downloadable JSON blob via data URL in the page (or None)
     opa_input_download_href = None
@@ -1065,7 +1076,7 @@ def onboarding_request_data_format_eval(req_id):
             input_obj = {}
 
     # Load policy text
-    policy_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'data_format_acceptance.rego')
+    policy_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'policies', 'full', 'data_format_acceptance.rego')
     try:
         with open(policy_path, 'r', encoding='utf-8') as f:
             rego_text = f.read()
@@ -1254,7 +1265,7 @@ def onboarding_data_format(project_id):
         return redirect(url_for('dashboard'))
 
     # Load data format questionnaire definition
-    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'schemas', 'data_format_questionnaire.json')
+    q_path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'questionnaires', 'full', 'data_format_questionnaire.json')
     try:
         with open(q_path, 'r', encoding='utf-8') as f:
             questionnaire = json.load(f)
