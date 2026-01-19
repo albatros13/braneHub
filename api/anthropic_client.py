@@ -1,6 +1,5 @@
-import base64
 import os
-from anthropic import Anthropic, APIError
+from anthropic import Anthropic
 import logging
 
 
@@ -18,5 +17,4 @@ if not ANTHROPIC_API_KEY:
 # Initialize Claude client
 llm_client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
-
-
+ANTHROPIC_MODEL="claude-sonnet-4-20250514"

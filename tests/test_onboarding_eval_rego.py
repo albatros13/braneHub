@@ -25,7 +25,7 @@ def opa_client():
 def test_put_policy_and_query_onboarding(opa_client):
     # Load the simple onboarding acceptance policy from disk
     project_root = os.path.dirname(os.path.dirname(__file__))
-    policy_path = os.path.join(project_root, "static", "data", "policies", "simple", "onboarding_acceptance.rego")
+    policy_path = os.path.join(project_root, "static", "data", "policies", "simple", "onboarding_region.rego")
     with open(policy_path, "r", encoding="utf-8") as f:
         rego_text = f.read()
 
@@ -37,9 +37,9 @@ def test_put_policy_and_query_onboarding(opa_client):
 
     # Load input cases from JSON files
     data_dir = os.path.join(os.path.dirname(__file__), "data")
-    with open(os.path.join(data_dir, "onboarding_acceptance_allow.json"), "r", encoding="utf-8") as f:
+    with open(os.path.join(data_dir, "onboarding_region_allow.json"), "r", encoding="utf-8") as f:
         allow_payload = json.load(f)
-    with open(os.path.join(data_dir, "onboarding_acceptance_deny.json"), "r", encoding="utf-8") as f:
+    with open(os.path.join(data_dir, "onboarding_region_deny.json"), "r", encoding="utf-8") as f:
         deny_payload = json.load(f)
 
     # Query decision for the acceptable case

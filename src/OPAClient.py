@@ -21,25 +21,26 @@ class OPAClient:
         resp.raise_for_status()
         return True
 
-    # def put_policy(self, policy_id: str, rego_text: str):
-    #     url = f"{self.opa_url}/v1/policies/{policy_id}"
-    #
-    #     # Debug: check what we're sending
-    #     print(f"Policy ID: {policy_id}")
-    #     print(f"Policy text length: {len(rego_text)}")
-    #     print(f"First 100 chars: {rego_text[:100]}")
-    #
-    #     resp = requests.put(
-    #         url,
-    #         data=rego_text,
-    #         headers={"Content-Type": "text/plain"}
-    #     )
-    #
-    #     print(f"Response status: {resp.status_code}")
-    #     print(f"Response body: {resp.text}")
-    #
-    #     resp.raise_for_status()
-    #     return True
+    # Same as put_policy but shows errors if the policy is wrong
+    def put_policy_debugging(self, policy_id: str, rego_text: str):
+        url = f"{self.opa_url}/v1/policies/{policy_id}"
+
+        # Debug: check what we're sending
+        print(f"Policy ID: {policy_id}")
+        print(f"Policy text length: {len(rego_text)}")
+        print(f"First 100 chars: {rego_text[:100]}")
+
+        resp = requests.put(
+            url,
+            data=rego_text,
+            headers={"Content-Type": "text/plain"}
+        )
+
+        print(f"Response status: {resp.status_code}")
+        print(f"Response body: {resp.text}")
+
+        resp.raise_for_status()
+        return True
 
     def query_data_path(self, data_path: str, input_obj: dict):
         """Query a data path decision endpoint (REST) with given input.

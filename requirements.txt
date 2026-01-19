@@ -16,3 +16,5 @@ qdrant-client==1.12.1
 sentence-transformers
 anthropic
 pytest
+huggingface_hub[hf_xet]
+pypdf

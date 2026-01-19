@@ -16,14 +16,18 @@ app.secret_key = 'dev-secret-key-change-me'
 # OpenAI (optional)
 try:
     from api.openai_client import llm_client as openai_llm_client
+    from api.openai_client import OPENAI_MODEL
 except Exception as _e:
     openai_llm_client = None
 
 # Anthropic (optional)
 try:
     from api.anthropic_client import llm_client as anthropic_llm_client
+    from api.anthropic_client import ANTHROPIC_MODEL
 except Exception:
     anthropic_llm_client = None
+
+
 
 # Qdrant is optional; we only use it if available and configured
 try:
@@ -102,7 +106,7 @@ def sanitize_filename(name: str) -> str:
     name = name.replace('..', '')
     return name or f"artifact_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}"
 
-
+# Revise !!!
 def get_embeddings(text: str):
     # Embeddings supported via OpenAI only (optional)
     if openai_llm_client is None:
@@ -1192,9 +1196,8 @@ def assistant_chat():
 
     try:
         if provider == 'openai':
-            model = os.getenv('OPENAI_MODEL', 'gpt-5') if llm_choice.startswith('gpt') else os.getenv('OPENAI_MODEL', 'gpt-5')
             completion = openai_llm_client.chat.completions.create(
-                model=model,
+                model=OPENAI_MODEL,
                 messages=messages
             )
             reply = completion.choices[0].message.content
@@ -1210,9 +1213,8 @@ def assistant_chat():
                     continue
                 role = 'user' if m['role'] == 'user' else 'assistant'
                 conv_msgs.append({"role": role, "content": [{"type": "text", "text": m['content']}]})
-            model = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514')
             resp = anthropic_llm_client.messages.create(
-                model=model,
+                model=ANTHROPIC_MODEL,
                 system=system_text,
                 max_tokens=1000,
                 messages=conv_msgs

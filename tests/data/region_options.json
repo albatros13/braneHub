@@ -1,0 +1,22 @@
+{
+  "United States": ["United States", "USA", "U.S.", "America", "California, USA", "New York", "US citizen"],
+  "United Kingdom": ["United Kingdom", "UK", "Great Britain", "England", "London, UK", "Britain", "U.K."],
+  "European Union": ["European Union", "EU", "Europe", "EU resident", "EU citizen", "Based in the EU"],
+  "Germany": ["Germany", "DE", "Deutschland", "Berlin", "Hamburg, Germany", "German resident"],
+  "France": ["France", "FR", "French Republic", "Paris", "Île-de-France", "France (EU)"],
+  "Netherlands": ["Netherlands", "NL", "Holland", "Amsterdam", "The Netherlands", "Dutch"],
+  "Spain": ["Spain", "ES", "España", "Madrid", "Barcelona, Spain", "Spanish resident"],
+  "Italy": ["Italy", "IT", "Italia", "Rome", "Milano", "Italian"],
+  "Switzerland": ["Switzerland", "CH", "Swiss", "Zürich", "Geneva", "Switzerland (non-EU)"],
+  "Canada": ["Canada", "CA", "Ontario", "Toronto", "British Columbia", "Canadian"],
+  "Australia": ["Australia", "AU", "Sydney", "Melbourne", "NSW", "Australian"],
+  "New Zealand": ["New Zealand", "NZ", "Aotearoa", "Wellington", "Auckland", "NZ resident"],
+  "India": ["India", "IN", "Bharat", "Delhi", "Bangalore", "Indian"],
+  "China": ["China", "PRC", "People’s Republic of China", "Beijing", "Shanghai", "Mainland China"],
+  "Japan": ["Japan", "JP", "Tokyo", "Osaka", "Nihon", "Japanese"],
+  "Singapore": ["Singapore", "SG", "Singapore City", "Republic of Singapore", "SGP", "Singaporean"],
+  "Brazil": ["Brazil", "BR", "Brasil", "São Paulo", "Rio de Janeiro", "Brazilian"],
+  "South Africa": ["South Africa", "ZA", "RSA", "Cape Town", "Johannesburg", "South African"],
+  "Russia": ["Russia", "Russian Federation", "RU", "Moscow", "St. Petersburg", "RF"],
+  "Middle East": ["Middle East", "MENA", "Gulf region", "UAE", "Dubai", "Saudi Arabia"]
+}

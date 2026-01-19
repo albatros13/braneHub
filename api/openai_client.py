@@ -15,4 +15,4 @@ if not OPENAI_API_KEY:
 
 llm_client = OpenAI(api_key=OPENAI_API_KEY)
 
-
+OPENAI_MODEL="gpt-5"
