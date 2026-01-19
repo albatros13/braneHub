@@ -10,7 +10,7 @@ from src.services.onboarding import build_onboarding_opa_input
 
 app = Flask(__name__)
 # NOTE: Replace this with a secure random value in production
-app.secret_key = 'dev-secret-key-change-me'
+app.secret_key = os.getenv('BRANEHUB_SECRET_KEY') or 'dev-secret-key-change-me'
 
 # --- AI Assistant dependencies ---
 # OpenAI (optional)

@@ -17,4 +17,4 @@ if not ANTHROPIC_API_KEY:
 # Initialize Claude client
 llm_client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
-ANTHROPIC_MODEL="claude-sonnet-4-20250514"
+ANTHROPIC_MODEL= os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-20250514"

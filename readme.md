@@ -11,9 +11,8 @@ braneHub is a platform for managing project onboarding with automated policy eva
 - **Domain Services (`src/services/`)**:
     - `data_format.py`: Logic for validating and formatting project-specific data requirements.
     - `onboarding.py`: Handles the core onboarding logic and state management.
-- **AI & Vector Search (`api/`, `src/`)**:
-    - `api/`: Clients for Anthropic, OpenAI, and Qdrant.
-    - `src/vectorize*.py`: Scripts for document vectorization and preparation for semantic search.
+- **AI (`api/`)**:
+    - `api/`: Clients for Anthropic, OpenAI, and Qdrant, including document vectorization and semantic search.
 - **Policies & Data (`static/data/`)**: Stores Rego policy files and sample data for onboarding and data format validation.
 - **Frontend (`templates/`, `static/`)**: Jinja2 templates and static assets for the web interface.
 
@@ -22,3 +21,16 @@ braneHub is a platform for managing project onboarding with automated policy eva
 ### Run as server
  - opa run --server --set=decision_logs.console=true
  - OPA server is available at http://localhost:8181 
+
+## AI assistant
+To be able to get assistance from the LLMs, set the following API keys:
+ - ANTHROPIC_API_KEY="sk-ant-api03-..."
+ - OPENAI_API_KEY="sk-proj--..."
+
+Optionally, to benefit from RAG and semantic search, set up the QDRANT cluster and provide credentials:
+ - QDRANT_URL="..."
+ - QDRANT_API_KEY="..."
+
+Optionally, set up the following variables to replace LLM models:
+  - ANTHROPIC_MODEL="..."
+  - OPENAI_MODEL="..."
