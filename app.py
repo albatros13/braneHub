@@ -263,6 +263,12 @@ def explore_projects():
     return render_template('explore_projects.html', projects=explore_list)
 
 
+@app.route('/opa/playground')
+@login_required
+def opa_playground():
+    return render_template('opa_playground.html')
+
+
 @app.route('/fdp/new', methods=['GET', 'POST'])
 @login_required
 def fdp_new():
