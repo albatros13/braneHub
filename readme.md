@@ -1,3 +1,6 @@
+# Update!!!
+This is an exploratory prototype, functional BraneHub portal is available [here] (https://github.com/MingjiangMa/branehub-platform)
+
 # Install and run
   - pip install -r requirements.txt
   - flask run
