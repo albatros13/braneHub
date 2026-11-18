@@ -1,5 +1,7 @@
 # Update!!!
-This is an exploratory prototype, functional BraneHub portal is available [here](https://github.com/MingjiangMa/branehub-platform)
+This is an exploratory prototype, functional implementation of the BraneHub portal is available [here](https://github.com/MingjiangMa/branehub-platform).
+The portal has been integrated with Brane coordination framework via [brane-integrator](https://github.com/aditya-130/brane-integrator), which 
+translates governance decisions into workflow execution rules.
 
 # Install and run
   - pip install -r requirements.txt
